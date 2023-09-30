@@ -105,157 +105,247 @@ app.get("/cards/:id", async (req, res) => {
   }
 });
 
-// POST - Create Collection
-app.post("/collection", async (req, res) => {
+
+// GET - All Cards In Collection + Collection Data
+app.get('/collection/:collection_id', async (req, res) => {
   try {
-    const user_id = req.body.user_id;
-    const collection_name = req.body.collection_name;
 
-    const createCollection = await pool.query("INSERT INTO collection (user_id, collection_name) VALUES ($1,$2)", [user_id, collection_name]);
-
-    res.json({ status: "CREATE COLLECTION SUCCESSFUL" });
-
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
-  }
-
-});
-
-// DELETE - Collection + CardsInCollection
-app.delete("/collection", async (req, res) => {
-  try {
-    const collection_id = req.body.collection_id;
-
-    const deleteCollection = await pool.query("DELETE FROM collection WHERE collection_id = $1", [collection_id])
-    const deleteCardInCollection = await pool.query("DELETE FROM cardincollection WHERE collection_id = $1", [collection_id]);
-
-    res.json({
-      status: "DELETE COLLECTION SUCCESSFUL"
-    });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
-  }
-});
-
-// GET - Collection Names
-app.get('/collection', async (req, res) => {
-  try {
-    const user_id = req.body.user_id;
-
-    const collectionNames = await pool.query("SELECT * FROM collection WHERE user_id = $1", [user_id]);
-    
-    res.json({
-      collection: collectionNames.rows
-    });
-
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
-  }
-  });
-
-  
-// GET - Cards In Collection
-app.get('/collection/:collection_name/:collection_id', async (req, res) => {
-  try {
-      const collection_name = req.params.collection_name;
-      const collection_id = req.params.collection_id;
-
-      const CardsInCollection = await pool.query(
-        `SELECT *
+    const collection_id = req.params.collection_id;
+    // console.log(collection_id);
+    const CardsInCollection = await pool.query(
+      `SELECT *
         FROM collection c
         JOIN cardincollection cc ON c.collection_id = cc.collection_id
-        JOIN cards ca ON cc.card_id = ca.card_id
+        JOIN cards ca ON cc.card_id = ca.id
         WHERE
-        (
-          c.collection_name = $1
-        ) AND
-        ( c.collection_id = $2)
-        `,[collection_name,collection_id]
-      );
+          c.collection_id = $1
+        `, [collection_id]
+    );
 
-      // loop through and calculate
-      let totalValue = 0;
-      let uniquCards=[];
-      for (const card of CardsInCollection.rows){
-          if(!uniquCards.includes(card.card_id)){
-            uniquCards.push(card.card_id);
-          };
-          if(card.value){
-            totalValue += card.value;
-          };
+    // loop through and calculate
+    let totalValue = 0;
+    let uniquCards = [];
+    for (const card of CardsInCollection.rows) {
+      if (!uniquCards.includes(card.card_id)) {
+        uniquCards.push(card.card_id);
       };
-      
+      if (card.value) {
+        totalValue += card.value;
+      };
+    };
 
-      res.json({totalCards: CardsInCollection.rows.length, 
-      totalValue: totalValue, uniquCards: uniquCards.length, cards:CardsInCollection.rows});
+
+    res.json({
+      totalCards: CardsInCollection.rows.length,
+      totalValue: totalValue, uniquCards: uniquCards.length, cards: CardsInCollection.rows
+    });
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
   }
-  });
-  
+});
+
 
 // POST - Add CardInCollection
 app.post('/cards', async (req, res) => {
-try {
-  const collection_id = req.body.collection_id;
-  const card_id = req.body.card_id;
-  const companygradedby_id = req.body.companygradedby_id;
-  const grade_id = req.body.grade_id;
-  const isfoil = req.body.isfoil;
-  const value = req.body.value;
+  try {
+    const collection_id = req.body.collection_id;
+    const card_id = req.body.card_id;
+    const companygradedby_id = req.body.companygradedby_id;
+    const grade_id = req.body.grade_id;
+    const isfoil = req.body.isfoil;
+    const value = req.body.value;
 
-  // SEARCH IF CARDINCOLLECTION ALREADY EXISTS
+    // SEARCH IF CARDINCOLLECTION ALREADY EXISTS
+    let searchQueryCardInCollection = "SELECT * FROM cardincollection WHERE collection_id = $1 AND card_id = $2"
+    let searchQueryCounter = 2;
+    let searchValues = [collection_id, card_id]
 
-  
-  let query = "INSERT INTO cardincollection (collection_id, card_id, count";
-  let paramCounter = 3;
-  let paramValues = " VALUES ($1, $2, $3";
-  let values = [collection_id, card_id, 1]
+    if (companygradedby_id >= 0 && grade_id >= 0) {
+      searchQueryCounter++;
+      searchQueryCardInCollection += " AND companygradedby_id = $" + searchQueryCounter + " AND grade_id = $";
+      searchValues.push(companygradedby_id);
+      searchQueryCounter++;
+      searchQueryCardInCollection += searchQueryCounter;
+      searchValues.push(grade_id);
+    }
+    if (isfoil) {
+      searchQueryCounter++;
+      searchQueryCardInCollection += " AND isfoil = $" + searchQueryCounter;
+      searchValues.push(isfoil);
+    }
+    if (value >= 0) {
+      searchQueryCounter++;
+      searchQueryCardInCollection += " AND value = $" + searchQueryCounter
+      searchValues.push(value);
+    }
 
-  if (companygradedby_id>=0 && grade_id>=0){
-    query += ", companygradedby_id, grade_id";
-    paramCounter++;
-    paramValues += ", $" + paramCounter;
-    values.push(companygradedby_id);
-    paramCounter++;
-    paramValues += ", $" + paramCounter;
-    values.push(grade_id);
+    const searchCardInCollection = await pool.query(searchQueryCardInCollection, searchValues);
+
+    if (searchCardInCollection.rows.length > 0) {
+      const cardincollection_id = searchCardInCollection.rows[0].cardincollection_id;
+      const updateCount = searchCardInCollection.rows[0].count + 1
+      const updateQuery = "UPDATE cardincollection SET count = $1 WHERE cardincollection_id = $2";
+
+      await pool.query(updateQuery, [updateCount, cardincollection_id]);
+      res.json({ status: "CARD ALREADY EXIST UPDATED COUNT" });
+    } else
+    // ELSE CREATE CardInCollection
+    {
+      let query = "INSERT INTO cardincollection (collection_id, card_id, count";
+      let paramCounter = 3;
+      let paramValues = " VALUES ($1, $2, $3";
+      let values = [collection_id, card_id, 1]
+
+      if (companygradedby_id >= 0 && grade_id >= 0) {
+        query += ", companygradedby_id, grade_id";
+        paramCounter++;
+        paramValues += ", $" + paramCounter;
+        values.push(companygradedby_id);
+        paramCounter++;
+        paramValues += ", $" + paramCounter;
+        values.push(grade_id);
+      }
+      if (isfoil) {
+        query += ", isfoil"
+        paramCounter++;
+        paramValues += ", $" + paramCounter;
+        values.push(isfoil);
+      }
+      if (value >= 0) {
+        query += ", value"
+        paramCounter++;
+        paramValues += ", $" + paramCounter;
+        values.push(value);
+      }
+
+      query += ") " + paramValues + ") RETURNING *"
+
+      await pool.query(query, values);
+
+      console.log(companygradedby_id, grade_id);
+      console.log(query);
+      res.json({ status: "CREATE CARDINCOLLECTION SUCCESS" });
+    };
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json('Server Error');
   }
-  if(isfoil){
-    query += ", isfoil"
-    paramCounter++;
-    paramValues += ", $" + paramCounter;
-    values.push(isfoil);
-  }
-  if(value>=0){
-    query += ", value"
-    paramCounter++;
-    paramValues += ", $" + paramCounter;
-    values.push(value);
-  }
-
-  query +=") " + paramValues + ") RETURNING *"
-
-  const createCardInCollection = await pool.query(query,values);
-  
-  console.log(companygradedby_id,grade_id);
-  console.log(query);
-  res.json({status:"CREATE CARDINCOLLECTION SUCCESS", cardstuff: createCardInCollection})
-
-} catch (err) {
-  console.error(err.message);
-  res.status(500).send('Server Error');
-}
 });
 
-// DELETE - Card In Collection
-  
+// DELETE - A Card In Collection
+app.delete('/cards', async (req, res) => {
+  try {
 
-//
+    const cardincollection_id = req.body.cardincollection_id;
+
+    const searchCardCount = "SELECT * FROM cardincollection WHERE cardincollection_id = $1";
+
+    const cardCount = await pool.query(searchCardCount, [cardincollection_id]);
+
+    if (cardCount.rows[0].count >1){
+      const newCount = cardCount.rows[0].count -1;
+      await pool.query("UPDATE cardincollection SET count = $1 WHERE cardincollection_id = $2", [newCount,cardincollection_id]);
+      res.json({status: "MULTIPLE CARDS DECREASED COUNT"});
+    }else if (cardCount.rows[0].count = 1){
+
+      const query = "DELETE FROM cardincollection WHERE cardincollection_id = $1";
+
+      await pool.query(query, [cardincollection_id]);
+      res.json({ status: "DELETE CARD IN COLLECTION SUCCESSFUL" });
+    }else{
+      res.json({ status: "CARD DOES NOT EXIST" });
+
+    }
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: 'Interal Server Error' })
+  }
+});
+
+// UPDATE CARD IN COLLECTION 
+
+// app.put('/collection', async (req, res) => {
+//   try {
+
+//     const { username, password } = req.body;
+
+//     // search for existing username 
+//     const querySearchUser = "SELECT * FROM users WHERE username = $1"
+//     const resultSearch = await pool.query(querySearchUser, [username]);
+
+//     if (resultSearch.rows.length > 0) {
+//       const storedPassword = resultSearch.rows[0].password;
+//       if (storedPassword == password){
+//         res.json({ status: "LOGIN SUCCESSFUL" });
+//       }else{
+//         res.json({ status: "INVALID PASSWORD" });
+//       }
+//     } else {
+//       res.json({ status: "ACCOUNT DOES NOT EXIST" });
+//     }
+//   } catch (err) {
+//     console.error(err.message);
+//     res.status(500).json({ error: 'Interal Server Error' })
+//   }
+// });
+// ############## USER LOGIN AND REGISTRATION ########################
+
+// POST - REGISTE USER
+app.post('/register', async (req, res) => {
+  try {
+
+    const { username, email, password } = req.body;
+
+    // search for existing username 
+    const querySearchUser = "SELECT * FROM users WHERE username = $1"
+    const resultSearch = await pool.query(querySearchUser, [username]);
+
+    if (resultSearch.rows.length > 0) {
+      res.json({ status: "ACCOUNT UERNAME ALREADY EXISTS" });
+    } else {
+      const queryCreateUser = "INSERT INTO users(username,email,password) VALUES ($1,$2,$3) RETURNING *"
+      const user = await pool.query(queryCreateUser,[username,email,password]);
+      await pool.query("INSERT INTO collection (user_id,wishlist) VALUES ($1,$2)",[user.rows[0].user_id, false])
+      await pool.query("INSERT INTO collection (user_id,wishlist) VALUES ($1,$2)",[user.rows[0].user_id, true])
+
+      res.json({ status: "ACCOUNT CREATION SUCCESSFUL" });
+    }
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: 'Interal Server Error' })
+  }
+});
+
+// POST - LOGIN
+app.post('/login', async (req, res) => {
+  try {
+
+    const { username, password } = req.body;
+
+    // search for existing username 
+    const querySearchUser = "SELECT * FROM users WHERE username = $1"
+    const resultSearch = await pool.query(querySearchUser, [username]);
+
+    if (resultSearch.rows.length > 0) {
+      const storedPassword = resultSearch.rows[0].password;
+      if (storedPassword == password){
+        res.json({ status: "LOGIN SUCCESSFUL" });
+      }else{
+        res.json({ status: "INVALID PASSWORD" });
+      }
+    } else {
+      res.json({ status: "ACCOUNT DOES NOT EXIST" });
+    }
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: 'Interal Server Error' })
+  }
+});
+
+
+
+
 // LISTEN
 app.listen(5000, () => {// listen to port 5000
   console.log("server has started on port 5000");
