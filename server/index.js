@@ -88,7 +88,40 @@ app.get("/cards", async (req, res) => {
   }
 });
 
+// GET A CARD
+app.get("/cards/:id", async (req, res)=>{
+  try {
+    const id = req.params.id;
 
+    const card = await pool.query("SELECT * FROM cards WHERE id = $1", [id])
+
+    res.json({
+      card: card
+    });
+
+  } catch (err) {
+    console.log(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// POST - Create Collection
+
+app.post("/collection", async(req, res)=>{
+  try {
+    const user_id = req.body.user_id;
+    const collection_name = req.body.collection_name;
+
+    const createCollection = await pool.query("INSERT INTO collection (user_id, collection_name) VALUES ($1,$2)", [user_id,collection_name]);
+
+    res.json({status: "CREATE COLLECTION SUCCESSFUL"});
+
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+
+});
 
 // LISTEN
 app.listen(5000, () => {// listen to port 5000
