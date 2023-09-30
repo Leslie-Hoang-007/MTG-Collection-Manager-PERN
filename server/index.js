@@ -80,7 +80,7 @@ app.get("/cards", async (req, res) => {
     // RESPOND WITH CARDS AND TOTAL ROW COUNT
     res.json({
       totalCards: totalCards.rows[0].count,
-      cards: cards,
+      cards: cards.rows,
     });
   } catch (err) {
     console.error(err.message);
@@ -89,14 +89,14 @@ app.get("/cards", async (req, res) => {
 });
 
 // GET A CARD
-app.get("/cards/:id", async (req, res)=>{
+app.get("/cards/:id", async (req, res) => {
   try {
     const id = req.params.id;
 
     const card = await pool.query("SELECT * FROM cards WHERE id = $1", [id])
 
     res.json({
-      card: card
+      card: card.rows
     });
 
   } catch (err) {
@@ -106,15 +106,14 @@ app.get("/cards/:id", async (req, res)=>{
 });
 
 // POST - Create Collection
-
-app.post("/collection", async(req, res)=>{
+app.post("/collection", async (req, res) => {
   try {
     const user_id = req.body.user_id;
     const collection_name = req.body.collection_name;
 
-    const createCollection = await pool.query("INSERT INTO collection (user_id, collection_name) VALUES ($1,$2)", [user_id,collection_name]);
+    const createCollection = await pool.query("INSERT INTO collection (user_id, collection_name) VALUES ($1,$2)", [user_id, collection_name]);
 
-    res.json({status: "CREATE COLLECTION SUCCESSFUL"});
+    res.json({ status: "CREATE COLLECTION SUCCESSFUL" });
 
   } catch (err) {
     console.error(err.message);
@@ -123,6 +122,140 @@ app.post("/collection", async(req, res)=>{
 
 });
 
+// DELETE - Collection + CardsInCollection
+app.delete("/collection", async (req, res) => {
+  try {
+    const collection_id = req.body.collection_id;
+
+    const deleteCollection = await pool.query("DELETE FROM collection WHERE collection_id = $1", [collection_id])
+    const deleteCardInCollection = await pool.query("DELETE FROM cardincollection WHERE collection_id = $1", [collection_id]);
+
+    res.json({
+      status: "DELETE COLLECTION SUCCESSFUL"
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// GET - Collection Names
+app.get('/collection', async (req, res) => {
+  try {
+    const user_id = req.body.user_id;
+
+    const collectionNames = await pool.query("SELECT * FROM collection WHERE user_id = $1", [user_id]);
+    
+    res.json({
+      collection: collectionNames.rows
+    });
+
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+  });
+
+  
+// GET - Cards In Collection
+app.get('/collection/:collection_name/:collection_id', async (req, res) => {
+  try {
+      const collection_name = req.params.collection_name;
+      const collection_id = req.params.collection_id;
+
+      const CardsInCollection = await pool.query(
+        `SELECT *
+        FROM collection c
+        JOIN cardincollection cc ON c.collection_id = cc.collection_id
+        JOIN cards ca ON cc.card_id = ca.card_id
+        WHERE
+        (
+          c.collection_name = $1
+        ) AND
+        ( c.collection_id = $2)
+        `,[collection_name,collection_id]
+      );
+
+      // loop through and calculate
+      let totalValue = 0;
+      let uniquCards=[];
+      for (const card of CardsInCollection.rows){
+          if(!uniquCards.includes(card.card_id)){
+            uniquCards.push(card.card_id);
+          };
+          if(card.value){
+            totalValue += card.value;
+          };
+      };
+      
+
+      res.json({totalCards: CardsInCollection.rows.length, 
+      totalValue: totalValue, uniquCards: uniquCards.length, cards:CardsInCollection.rows});
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+  });
+  
+
+// POST - Add CardInCollection
+app.post('/cards', async (req, res) => {
+try {
+  const collection_id = req.body.collection_id;
+  const card_id = req.body.card_id;
+  const companygradedby_id = req.body.companygradedby_id;
+  const grade_id = req.body.grade_id;
+  const isfoil = req.body.isfoil;
+  const value = req.body.value;
+
+  // SEARCH IF CARDINCOLLECTION ALREADY EXISTS
+
+  
+  let query = "INSERT INTO cardincollection (collection_id, card_id, count";
+  let paramCounter = 3;
+  let paramValues = " VALUES ($1, $2, $3";
+  let values = [collection_id, card_id, 1]
+
+  if (companygradedby_id>=0 && grade_id>=0){
+    query += ", companygradedby_id, grade_id";
+    paramCounter++;
+    paramValues += ", $" + paramCounter;
+    values.push(companygradedby_id);
+    paramCounter++;
+    paramValues += ", $" + paramCounter;
+    values.push(grade_id);
+  }
+  if(isfoil){
+    query += ", isfoil"
+    paramCounter++;
+    paramValues += ", $" + paramCounter;
+    values.push(isfoil);
+  }
+  if(value>=0){
+    query += ", value"
+    paramCounter++;
+    paramValues += ", $" + paramCounter;
+    values.push(value);
+  }
+
+  query +=") " + paramValues + ") RETURNING *"
+
+  const createCardInCollection = await pool.query(query,values);
+  
+  console.log(companygradedby_id,grade_id);
+  console.log(query);
+  res.json({status:"CREATE CARDINCOLLECTION SUCCESS", cardstuff: createCardInCollection})
+
+} catch (err) {
+  console.error(err.message);
+  res.status(500).send('Server Error');
+}
+});
+
+// DELETE - Card In Collection
+  
+
+//
 // LISTEN
 app.listen(5000, () => {// listen to port 5000
   console.log("server has started on port 5000");
