@@ -161,7 +161,7 @@ app.post('/cards', async (req, res) => {
     let searchQueryCounter = 2;
     let searchValues = [collection_id, card_id]
 
-    if (companygradedby_id >= 0 && grade_id >= 0) {
+    if (companygradedby_id && grade_id) {
       searchQueryCounter++;
       searchQueryCardInCollection += " AND companygradedby_id = $" + searchQueryCounter + " AND grade_id = $";
       searchValues.push(companygradedby_id);
@@ -174,7 +174,7 @@ app.post('/cards', async (req, res) => {
       searchQueryCardInCollection += " AND isfoil = $" + searchQueryCounter;
       searchValues.push(isfoil);
     }
-    if (value >= 0) {
+    if (value) {
       searchQueryCounter++;
       searchQueryCardInCollection += " AND value = $" + searchQueryCounter
       searchValues.push(value);
@@ -192,12 +192,12 @@ app.post('/cards', async (req, res) => {
     } else
     // ELSE CREATE CardInCollection
     {
-      let query = "INSERT INTO cardincollection (collection_id, card_id, count";
-      let paramCounter = 3;
-      let paramValues = " VALUES ($1, $2, $3";
-      let values = [collection_id, card_id, 1]
+      let query = "INSERT INTO cardincollection (collection_id, card_id";
+      let paramCounter = 2;
+      let paramValues = " VALUES ($1, $2";
+      let values = [collection_id, card_id]
 
-      if (companygradedby_id >= 0 && grade_id >= 0) {
+      if (companygradedby_id  && grade_id ) {
         query += ", companygradedby_id, grade_id";
         paramCounter++;
         paramValues += ", $" + paramCounter;
@@ -212,7 +212,7 @@ app.post('/cards', async (req, res) => {
         paramValues += ", $" + paramCounter;
         values.push(isfoil);
       }
-      if (value >= 0) {
+      if (value) {
         query += ", value"
         paramCounter++;
         paramValues += ", $" + paramCounter;
@@ -265,30 +265,102 @@ app.delete('/cards', async (req, res) => {
 
 // UPDATE CARD IN COLLECTION 
 
-// app.put('/collection', async (req, res) => {
-//   try {
+app.put('/collection', async (req, res) => {
+  try {
 
-//     const { username, password } = req.body;
+    const {cardincollection_id, collection_id,card_id,companygradedby_id,grade_id,isfoil,count,value} =req.body; 
+    // console.log(cardincollection_id, collection_id,card_id,companygradedby_id,grade_id,isfoil,count,value);
+    // Search
+    // const card = await pool.query("SELECT * FROM cardincollection WHERE carcincollection_id = "+ cardincollection_id);
+    // console.log("exists");
 
-//     // search for existing username 
-//     const querySearchUser = "SELECT * FROM users WHERE username = $1"
-//     const resultSearch = await pool.query(querySearchUser, [username]);
+    // // Search if card already exist with same values and increment count 
+    // let searchQuery = "SELECT * FROM cardincollection WHERE collection_id = $1 AND card_id = $2 ";
+    // let searchQueryCounter = 2;
+    // let searchvalues = [collection_id, card_id];
 
-//     if (resultSearch.rows.length > 0) {
-//       const storedPassword = resultSearch.rows[0].password;
-//       if (storedPassword == password){
-//         res.json({ status: "LOGIN SUCCESSFUL" });
-//       }else{
-//         res.json({ status: "INVALID PASSWORD" });
-//       }
-//     } else {
-//       res.json({ status: "ACCOUNT DOES NOT EXIST" });
-//     }
-//   } catch (err) {
-//     console.error(err.message);
-//     res.status(500).json({ error: 'Interal Server Error' })
-//   }
-// });
+    // if (companygradedby_id >= 0 && grade_id >= 0) {
+    //   searchQueryCounter++;
+    //   searchQueryCardInCollection += " AND companygradedby_id = $" + searchQueryCounter + " AND grade_id = $";
+    //   searchValues.push(companygradedby_id);
+    //   searchQueryCounter++;
+    //   searchQueryCardInCollection += searchQueryCounter;
+    //   searchValues.push(grade_id);
+    // }
+    // if (isfoil) {
+    //   searchQueryCounter++;
+    //   searchQueryCardInCollection += " AND isfoil = $" + searchQueryCounter;
+    //   searchValues.push(isfoil);
+    // }
+    // if (value >= 0) {
+    //   searchQueryCounter++;
+    //   searchQueryCardInCollection += " AND value = $" + searchQueryCounter
+    //   searchValues.push(value);
+    // }
+
+    // const exist = await pool.query(searchQuery, searchValues);
+
+    // if (exist.rows.length >0){
+    //   const count = exist.rows[0].count + 1;
+    //   await pool.query("UPDATE FROM cardincollection SET count = $1 WHERE cardincollection_id = $2"
+    //   , [count, card]
+    //   );
+    // }
+
+    // UPDATE
+    let query = "UPDATE cardincollection SET"
+    let numberOfParams = 0;
+    let params = [];
+    if (companygradedby_id && grade_id ) {
+      numberOfParams++;
+      query += " companygradedby_id = $" + numberOfParams + " , grade_id = $";
+      params.push(companygradedby_id);
+      numberOfParams++;
+      query += numberOfParams;
+      params.push(grade_id);
+    }
+    if (isfoil) {
+      numberOfParams++;
+      if (numberOfParams ==1){
+        query += " isfoil = $" + numberOfParams;
+      } else{
+        query += ", isfoil = $" + numberOfParams;
+      }
+      params.push(isfoil);
+    }
+    if (value) {
+      numberOfParams++;
+      if (numberOfParams ==1){
+        query += " value = $" + numberOfParams
+      } else{
+        query += ", value = $" + numberOfParams
+      }
+      params.push(value);
+    }
+    if (count > 1) {
+      numberOfParams++;
+      if (numberOfParams ==1){
+        query += " count = $" + numberOfParams
+      } else{
+        query += ", count = $" + numberOfParams
+      }
+      params.push(count);
+    }
+
+
+    numberOfParams++;
+    query += " WHERE cardincollection_id = $" + numberOfParams;
+    params.push(cardincollection_id);
+    // console.log(query,params);
+    await pool.query(query, params);
+   
+    res.json({staus: "CARDINCOLLECTION UPDATED SUCCESS"})
+   
+    } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: 'Interal Server Error' })
+  }
+});
 // ############## USER LOGIN AND REGISTRATION ########################
 
 // POST - REGISTE USER
@@ -344,7 +416,7 @@ app.post('/login', async (req, res) => {
 });
 
 
-
+// DASHBOARD 
 
 // LISTEN
 app.listen(5000, () => {// listen to port 5000
