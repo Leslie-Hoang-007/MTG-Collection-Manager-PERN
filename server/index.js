@@ -107,10 +107,10 @@ app.get("/cards/:id", async (req, res) => {
 
 
 // GET - All Cards In Collection + Collection Data
-app.get('/collection/:collection_id', async (req, res) => {
+app.get('/collection', async (req, res) => {
   try {
 
-    const collection_id = req.params.collection_id;
+    const collection_id = req.body.collection_id;
     // console.log(collection_id);
     const CardsInCollection = await pool.query(
       `SELECT *
@@ -145,9 +145,13 @@ app.get('/collection/:collection_id', async (req, res) => {
   }
 });
 
-
+var log = function(req,res,next){// useful for logging
+  console.log('first');
+  console.log(req.body);
+  next();
+}
 // POST - Add CardInCollection
-app.post('/cards', async (req, res) => {
+app.post('/cards',[log], async (req, res) => {
   try {
     const collection_id = req.body.collection_id;
     const card_id = req.body.card_id;
@@ -417,6 +421,32 @@ app.post('/login', async (req, res) => {
 
 
 // DASHBOARD 
+
+app.post('/dashboard', async (req, res) => {
+  try {
+
+    const { user_id } = req.body;
+
+    // search for existing username 
+    const querySearchUser = "SELECT * FROM users WHERE username = $1"
+    const resultSearch = await pool.query(querySearchUser, [username]);
+
+    if (resultSearch.rows.length > 0) {
+      const storedPassword = resultSearch.rows[0].password;
+      if (storedPassword == password){
+        res.json({ status: "LOGIN SUCCESSFUL" });
+      }else{
+        res.json({ status: "INVALID PASSWORD" });
+      }
+    } else {
+      res.json({ status: "ACCOUNT DOES NOT EXIST" });
+    }
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: 'Interal Server Error' })
+  }
+});
+
 
 // LISTEN
 app.listen(5000, () => {// listen to port 5000
