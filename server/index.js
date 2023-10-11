@@ -14,14 +14,15 @@ app.get("/cards", async (req, res) => {
   try {
     // const allCards = await pool.query("SELECT * From cards Limit 100");
 
-    const page = req.body.page;
-    const limit = req.body.limit;
+    const page = parseInt(req.query.page);
+    const limit = parseInt(req.query.limit);
     const skip = (page - 1) * limit;
-    const searchName = req.body.search;
+    const searchName = req.query.search;
 
-    const searchSet = req.body.set_name;
-    const sortBy = req.body.sortBy;
+    const searchSet = req.query.set_name;
+    const sortBy = req.query.sortBy;
 
+    // console.log(req.query);
 
     // SQL SELECT
     let query = `SELECT * FROM cards`;
@@ -150,6 +151,7 @@ var log = function(req,res,next){// useful for logging
   console.log(req.body);
   next();
 }
+
 // POST - Add CardInCollection
 app.post('/cards',[log], async (req, res) => {
   try {
@@ -373,19 +375,22 @@ app.post('/register', async (req, res) => {
 
     const { username, email, password } = req.body;
 
-    // search for existing username 
-    const querySearchUser = "SELECT * FROM users WHERE username = $1"
-    const resultSearch = await pool.query(querySearchUser, [username]);
+    // search for existing email
+    const querySearchUser = "SELECT * FROM users WHERE email = $1"
+    const resultSearch = await pool.query(querySearchUser, [email]);
 
     if (resultSearch.rows.length > 0) {
-      res.json({ status: "ACCOUNT UERNAME ALREADY EXISTS" });
+      res.json({ status: "EMAIL ADDRESS IN USE" });
     } else {
       const queryCreateUser = "INSERT INTO users(username,email,password) VALUES ($1,$2,$3) RETURNING *"
       const user = await pool.query(queryCreateUser,[username,email,password]);
+      // console.log(user);
+
+      // CREATE WISHLIST AND COLLECTION
       await pool.query("INSERT INTO collection (user_id,wishlist) VALUES ($1,$2)",[user.rows[0].user_id, false])
       await pool.query("INSERT INTO collection (user_id,wishlist) VALUES ($1,$2)",[user.rows[0].user_id, true])
 
-      res.json({ status: "ACCOUNT CREATION SUCCESSFUL" });
+      res.json({ status: "ACCOUNT CREATION SUCCESSFUL", user_id: user.rows[0].user_id });
     }
   } catch (err) {
     console.error(err.message);
@@ -397,16 +402,15 @@ app.post('/register', async (req, res) => {
 app.post('/login', async (req, res) => {
   try {
 
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
     // search for existing username 
-    const querySearchUser = "SELECT * FROM users WHERE username = $1"
-    const resultSearch = await pool.query(querySearchUser, [username]);
-
+    const querySearchUser = "SELECT * FROM users WHERE email = $1"
+    const resultSearch = await pool.query(querySearchUser, [email]);
     if (resultSearch.rows.length > 0) {
       const storedPassword = resultSearch.rows[0].password;
       if (storedPassword == password){
-        res.json({ status: "LOGIN SUCCESSFUL" });
+        res.json({ status: "LOGIN SUCCESSFUL" ,user_id: resultSearch.rows[0].user_id});
       }else{
         res.json({ status: "INVALID PASSWORD" });
       }
@@ -424,26 +428,43 @@ app.post('/login', async (req, res) => {
 
 app.post('/dashboard', async (req, res) => {
   try {
+    const user_id = req.body.user_id;
 
-    const { user_id } = req.body;
+    // console.log(collection_id);
+    const CardsInCollection = await pool.query(
+      `SELECT *
+        FROM collection c
+        JOIN cardincollection cc ON c.collection_id = cc.collection_id
+        JOIN cards ca ON cc.card_id = ca.id
+        WHERE
+          c.wishlist= false
+          AND
+          c.user_id = $1
+        `, [user_id]
+    );
 
-    // search for existing username 
-    const querySearchUser = "SELECT * FROM users WHERE username = $1"
-    const resultSearch = await pool.query(querySearchUser, [username]);
+    // loop through and calculate
+    let totalValue = 0;
+    let uniquCards = [];
+    for (const card of CardsInCollection.rows) {
+      if (!uniquCards.includes(card.card_id)) {
+        uniquCards.push(card.card_id);
+      };
+      if (card.value) {
+        totalValue += card.value;
+      };
+    };
 
-    if (resultSearch.rows.length > 0) {
-      const storedPassword = resultSearch.rows[0].password;
-      if (storedPassword == password){
-        res.json({ status: "LOGIN SUCCESSFUL" });
-      }else{
-        res.json({ status: "INVALID PASSWORD" });
-      }
-    } else {
-      res.json({ status: "ACCOUNT DOES NOT EXIST" });
-    }
+
+    res.json({
+      totalCards: CardsInCollection.rows.length,
+      totalValue: totalValue, 
+      uniqueCards: uniquCards.length, 
+      // cards: CardsInCollection.rows
+    });
   } catch (err) {
     console.error(err.message);
-    res.status(500).json({ error: 'Interal Server Error' })
+    res.status(500).send('Server Error');
   }
 });
 
