@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useCookies } from "react-cookie";
+import axios from "axios";
 
 export const Navbar = () => {
     // cookies
@@ -8,36 +9,53 @@ export const Navbar = () => {
     const navigate = useNavigate();
 
 
+    const fetchLogout = async () =>{
+        const user_id = cookies.access_token
+        const response = await axios.put('http://localhost:5000/logout',{user_id});
+        console.log(response);
+    };
     // logout
     const logout = () => {
+        fetchLogout();
         setCookies("access_token", "");  // set cookies to ""
+        setCookies("collection_id", "");  // set cookies to ""
+        setCookies("wishlist_id", "");  // set cookies to ""
         window.localStorage.clear(); // clear local storage
-        navigate("/auth");// navigate to auth page
+        navigate("/");// navigate to auth page
     };
 
-    return <div className="navbarbg">
+    return (<div className="navbarbg">
         <div className="navbar">
+            <Link to="/" className="custom-link">MTGCollector</Link>
             <Link to="/dashboard" className="custom-link">Dashboard</Link>
-            
             <Link to="/cards" className="custom-link">Cards</Link>
-            {!cookies.access_token &&(
+
+            {!cookies.access_token && (
                 <Link to="/account/register" className="custom-link">Register</Link>
             )
             }
+
             {!cookies.access_token && (
                 <Link to="/account/signin" className="custom-link">Login</Link>
-                
             )}
-            
-            {cookies.access_token &&(
+
+            {cookies.access_token && (
                 <>
                     <Link to="/collection" className="custom-link">Collection</Link>
-                    <button onClick={logout} className="custom-link">
-                        Logout
-                    </button>
+                    <Link to="/wishlist" className="custom-link">Wishlist</Link>
                 </>
             )}
+
+            <Link to="/premium" className="custom-link">Premium</Link>
+
+            {cookies.access_token && (
+                <button onClick={logout} className="custom-link">
+                    Logout
+                </button>
+            )}
+
         </div>
 
-    </div>;
+    </div>
+    );
 };

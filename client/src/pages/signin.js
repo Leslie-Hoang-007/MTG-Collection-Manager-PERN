@@ -11,7 +11,7 @@ export const Signin = () => {
 
 const Login = () => {
     // create cookie 
-    const [_, setCookies] = useCookies(["access_token"]);
+    const [_, setCookies] = useCookies();
 
     // Variables
     const [email, setEmail] = useState("");
@@ -20,6 +20,9 @@ const Login = () => {
 
     // Navigation
     const navigate = useNavigate();
+
+    // REDIRECT TO SIGN UP
+    const redirectSignup = ()=>{navigate('/account/register')};
 
     // fetch login
     const handleSubmit = async (event) => {// async
@@ -34,6 +37,8 @@ const Login = () => {
             if (result.data.user_id){
                 // window.localStorage.setItem("user_id", result.data.user_id);// set local sotrage to userid
                 setCookies("access_token", result.data.user_id);
+                setCookies("collection_id", result.data.collection_id);
+                setCookies("wishlist_id", result.data.wishlist_id);
                 navigate("/dashboard");// navigate to home page
             }else{
                 // window.location.reload();
@@ -75,6 +80,8 @@ const Login = () => {
                     />
                 </div>
                 <button type="submit">Login</button>
+                <button onClick={redirectSignup}>Sign Up</button>
+                
             </form>
         </div>
     );

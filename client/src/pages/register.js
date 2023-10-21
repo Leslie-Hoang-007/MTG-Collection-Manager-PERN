@@ -6,11 +6,12 @@ import { useNavigate } from "react-router-dom";
 export const Register = () => {
     // create cookie 
     // NOT SET YET 
-    const [_, setCookies] = useCookies(["access_token"]);
+    const [_, setCookies] = useCookies();
 
     // Variables
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [cPassword, setCPassword] = useState("");
     const [email, setEmail] = useState("");
     const [cEmail, setCEmail] = useState("");
     const [error, setError] = useState("");
@@ -19,12 +20,15 @@ export const Register = () => {
     // Navigation
     const navigate = useNavigate();
 
-    // fetch login
+    // fetch register
     const handleSubmit = async (event) => {// async
         event.preventDefault();// prevent refresh THEN NAVIGATE DASHBOARD
         // Check if email and email confirmation match
         if (email !== cEmail) {
             setError("Email and email confirmation do not match.");
+            return; // EXIT
+        }else if(password !== cPassword){
+            setError("Passwords do not match.");
             return; // EXIT
         }else{
             setError("");
@@ -42,6 +46,9 @@ export const Register = () => {
             }
             if (result.data.status == "ACCOUNT CREATION SUCCESSFUL") {
                 setCookies("access_token",result.data.user_id);
+                setCookies("collection_id", result.data.collection_id);
+                setCookies("wishlist_id", result.data.wishlist_id);
+
                 // window.localStorage.setItem("user_id", result.data.user_id);// set local sotrage to userid
                 navigate("/dashboard");// navigate to home page
             }
@@ -79,7 +86,7 @@ export const Register = () => {
                     <label htmlFor="cemail">Email address confirmation:</label>
                     <input
                         type="text"
-                        id="email"
+                        id="cEmail"
                         value={cEmail}
                         onChange={(event) => setCEmail(event.target.value)}
                     />
@@ -91,6 +98,15 @@ export const Register = () => {
                         id="password"
                         value={password}
                         onChange={(event) => setPassword(event.target.value)}
+                    />
+                </div>
+                <div className="form-group">
+                    <label htmlFor="password">Confirm Password:</label>
+                    <input
+                        type="password"
+                        id="cPassword"
+                        value={cPassword}
+                        onChange={(event) => setCPassword(event.target.value)}
                     />
                 </div>
                 <button type="submit">Login</button>

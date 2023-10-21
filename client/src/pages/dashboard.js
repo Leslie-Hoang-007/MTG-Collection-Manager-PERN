@@ -9,7 +9,7 @@ export const Dashboard = () =>{
 
 
     // variables
-    const [cookies, _] = useCookies(["access_token"]);
+    const [cookies, _] = useCookies();
     const [user_id,setUser_id] = useState("");
     const [uniqueCards,setUniqueCards] = useState("");
     const [totalCards,setTotalCards] = useState("");
@@ -42,6 +42,7 @@ export const Dashboard = () =>{
             setUniqueCards(data.uniqueCards);
             setTotalCards(data.totalCards);
             setTotalValue(data.totalValue);
+            // console.log(cookies);
         } catch (error) {
             console.error("Error fetching set names:", error);
         }

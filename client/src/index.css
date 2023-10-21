@@ -11,3 +11,69 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+
+/* ##################### POP UP MENU STYLE ############################ */
+.dropDownMenu {
+  position: absolute;
+  top: 4.5rem;
+  right: 1.5rem;
+  width: 200px;
+  border-radius: 8px;
+  background-color:
+    white;
+  border: 1px solid gray;
+  padding:0px;
+}
+
+.dropDownMenu ul li{
+  padding:0px;
+  list-style: none;
+  text-align: left;
+}
+.dropDownMenu ul {
+  list-style: none;
+  padding: 10px;
+  margin:0px;
+}
+.dropDownMenu::before {
+  content: '';
+  position: absolute;
+  top: -0.7rem;
+  left: 1.1rem;
+  width: 20px;
+  height: 20px;
+  transform: rotate(45deg);
+  background-color:
+    white;
+  border-left: 1px solid gray;
+  border-top: 1px solid gray;
+  
+}
+
+/* ##################### MODAL MENU STYLE ############################ */
+
+.backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background: #000000e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: hidden;
+}
+
+.modal {
+  width: clamp(50%, 700px, 90%);
+  height: min(50%, auto);
+  margin: auto;
+  padding: 25px 2rem;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: white;
+}
