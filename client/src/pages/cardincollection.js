@@ -31,7 +31,8 @@ export const CardInCollection = () => {
     const fetchCard = async () => {
         try {
             console.log(cardincollection_id);
-            const response = await axios.get(`http://localhost:5000/collection?cardincollection_id=${cardincollection_id}`);
+            const baseURL = process.env.NODE_ENV === 'production' ? `collection?cardincollection_id=${cardincollection_id}` : `http://localhost:5000/collection?cardincollection_id=${cardincollection_id}`;
+            const response = await axios.get(baseURL);
             // const data = response.data;
             await setCard(response.data.card);
             // console.log(response.data.card);
@@ -43,7 +44,8 @@ export const CardInCollection = () => {
 
     const fetchGrades = async () => {
         try {
-            const response = await axios.get(`http://localhost:5000/grade`);
+            const baseURL = process.env.NODE_ENV === 'production' ? `grade` : `http://localhost:5000/grade`;
+            const response = await axios.get(baseURL);
             // console.log(response.data.companygradedby);
             setCompany(response.data.companygradedby);
             setGrades(response.data.grades);
@@ -83,8 +85,9 @@ export const CardInCollection = () => {
             let isfoil = editFoil;
             let count = parseInt(editCount);
             let value = parseInt(editPrice);
+            const baseURL = process.env.NODE_ENV === 'production' ? 'collection' : 'http://localhost:5000/collection';
 
-            const response = await axios.put('http://localhost:5000/collection', { cardincollection_id, companygradedby_id, grade_id, isfoil, count, value });
+            const response = await axios.put(baseURL, { cardincollection_id, companygradedby_id, grade_id, isfoil, count, value });
 
             console.log(response);
             // REFRESH CARD STATS

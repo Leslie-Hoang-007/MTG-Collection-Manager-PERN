@@ -12,7 +12,8 @@ export const Card = () => {
 
     useEffect(() => {
         // Make an API call to fetch card data based on the cardid
-        axios.get(`http://localhost:5000/cards/${card_id}`)
+        const baseURL = process.env.NODE_ENV === 'production' ? `cards/${card_id}` : `http://localhost:5000/cards/${card_id}`;
+        axios.get(baseURL)
             .then(response => {
                 setCard(response.data.card[0]);
                 console.log(response.data.card[0]);

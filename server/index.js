@@ -283,6 +283,7 @@ app.post('/cards', async (req, res) => {
     const companygradedby_id = req.body.companygradedby_id;
     const grade_id = req.body.grade_id;
     const isfoil = req.body.isfoil;
+    const count = req.body.count;
     const value = req.body.value;
 
 
@@ -381,6 +382,12 @@ app.post('/cards', async (req, res) => {
         paramCounter++;
         paramValues += ", $" + paramCounter;
         values.push(value);
+      }
+      if (count) {
+        query += ", count"
+        paramCounter++;
+        paramValues += ", $" + paramCounter;
+        values.push(count);
       }
 
       query += ") " + paramValues + ") RETURNING *"

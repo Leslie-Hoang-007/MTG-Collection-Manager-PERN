@@ -12,6 +12,7 @@ export const Home = () => {
         if (user_id){
             navigate("/dashboard");
         }
+        
     },[])
 
 

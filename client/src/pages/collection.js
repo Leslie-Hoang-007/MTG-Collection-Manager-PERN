@@ -24,13 +24,12 @@ export const Collection = () => {
         fetchSets();
         fetchCards();
         console.log(cookies.collection_id);
-    }, [page,search,set_name,limit,sortBy]);
+    }, [page, search, set_name, limit, sortBy]);
 
     const fetchSets = async () => {
         try {
-            const response = await axios.get(
-                `http://localhost:5000/sets`
-            );
+            const baseURL = process.env.NODE_ENV === 'production' ? `sets` : `http://localhost:5000/sets`;
+            const response = await axios.get(baseURL);
             const data = response.data;
 
             setSets(data.sets);
@@ -41,9 +40,10 @@ export const Collection = () => {
 
     const fetchCards = async () => {
         try {
+            const baseURL = process.env.NODE_ENV === 'production' ? `collection` : `http://localhost:5000/collection`;
             const collection_id = cookies.collection_id;
             const response = await axios.post(
-                `http://localhost:5000/collection`, {collection_id,page,limit,search,set_name,sortBy}
+                baseURL, { collection_id, page, limit, search, set_name, sortBy }
             );
 
             const data = response.data;
@@ -57,8 +57,9 @@ export const Collection = () => {
 
     const fetchDeleteCard = async (cardincollection_id) => {
         try {
-            console.log(cardincollection_id);
-            const response = await axios.delete(`http://localhost:5000/cards`, {data:{user_id, cardincollection_id}});
+            // console.log(cardincollection_id);
+            const baseURL = process.env.NODE_ENV === 'production' ? `cards` : `http://localhost:5000/cards`;
+            const response = await axios.delete(baseURL, { data: { user_id, cardincollection_id } });
             console.log(response);
             fetchCards();
         } catch (err) {
@@ -94,8 +95,8 @@ export const Collection = () => {
                                     </p>
                                 </div>
                             )} */}
-                            
-                            { card["image_uris.normal"] ? (
+
+                            {card["image_uris.normal"] ? (
                                 <img src={card["image_uris.normal"]} alt={card.name} />
                             ) : card.multiverse_ids && card.multiverse_ids.length > 0 ? (
                                 <img
@@ -115,7 +116,7 @@ export const Collection = () => {
                         </p>
                         <p>{card.count}</p>
                         <button
-                        onClick={() => fetchDeleteCard(card.cardincollection_id)}
+                            onClick={() => fetchDeleteCard(card.cardincollection_id)}
                         >-
                         </button>
                     </div>
@@ -181,7 +182,7 @@ export const Collection = () => {
             </div>
             <div>
                 <label>Sort By:</label>
-                <select value={sortBy} onChange={(e)=> setSortBy(e.target.value)}>
+                <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
                     <option value="name-asc">Name (A-Z)</option>
                     <option value="name-desc">Name (Z-A)</option>
                     <option value="price-high">Price (High to Low)</option>
@@ -189,7 +190,7 @@ export const Collection = () => {
                 </select>
             </div>
             <div>
-                {cards ? renderCardTable(): null}
+                {cards ? renderCardTable() : null}
             </div>
             <RenderPageNumbers
                 page={page}

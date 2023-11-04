@@ -38,6 +38,8 @@ export const Cards = () => {
         fetchCards();
     }, [page, search, set_name, limit, sortBy]);
 
+
+
     const fetchSets = async () => {
         try {
             const response = await axios.get(
@@ -74,8 +76,9 @@ export const Cards = () => {
     // GET CARDS
     const fetchCards = async () => {
         try {
+            const baseURL = process.env.NODE_ENV === 'production' ? `cards?page=${page}&limit=${limit}&search=${search}&set_name=${set_name}&sortBy=${sortBy}` : `http://localhost:5000/cards?page=${page}&limit=${limit}&search=${search}&set_name=${set_name}&sortBy=${sortBy}`;
             const response = await axios.get(
-                `http://localhost:5000/cards?page=${page}&limit=${limit}&search=${search}&set_name=${set_name}&sortBy=${sortBy}`
+                baseURL
             );
             const data = response.data;
             setCards(data.cards);
@@ -90,9 +93,10 @@ export const Cards = () => {
     // ADD TO COLLECTION
     const fetchSaveCard = async (card_id, value) => {
         try {
-            console.log(user_id);
+            // console.log(user_id);
+            const baseURL = process.env.NODE_ENV === 'production' ? "cards" : "http://localhost:5000/cards";
             const collection_id = cookies.collection_id;
-            const response = await axios.post("http://localhost:5000/cards", { user_id, collection_id, card_id, value });
+            const response = await axios.post(baseURL, { user_id, collection_id, card_id, value });
             console.log(response);
         } catch (err) {
             console.log(err);
@@ -102,8 +106,9 @@ export const Cards = () => {
     // ADD TO WISHLIST
     const fetchSaveWishlistCard = async (card_id, value) => {
         try {
+            const baseURL = process.env.NODE_ENV === 'production' ? "cards" : "http://localhost:5000/cards";
             const collection_id = cookies.wishlist_id;
-            const response = await axios.post("http://localhost:5000/cards", { user_id, collection_id, card_id, value });
+            const response = await axios.post(baseURL, { user_id, collection_id, card_id, value });
             console.log(response);
         } catch (err) {
             console.log(err);

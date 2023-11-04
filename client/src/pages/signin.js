@@ -29,7 +29,8 @@ const Login = () => {
         event.preventDefault();// prevent refresh THEN NAVIGATE DASHBOARD
 
         try {
-            const result = await axios.post("http://localhost:5000/login", {// fetch api
+            const baseURL = process.env.NODE_ENV === 'production' ? "login" : "http://localhost:5000/login";
+            const result = await axios.post(baseURL, {// fetch api
                 email,
                 password,
             });

@@ -58,7 +58,8 @@ const Modal = ({ handleClose, card }) => {
   // FETCH GRADING COMPANY AND ALL GRADES
   const fetchGrades = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/grade`);
+      const baseURL = process.env.NODE_ENV === 'production' ? `grade` : `http://localhost:5000/grade`;
+      const response = await axios.get(baseURL);
       // console.log(response.data.companygradedby);
       setCompany(response.data.companygradedby);
       setGrades(response.data.grades);
@@ -73,7 +74,7 @@ const Modal = ({ handleClose, card }) => {
     setFilteredGrades(grades.filter((grades) => grades.companygradedby_id == companygradedby_id));
     setEditCompany(companygradedby_id);
     setEditGrade(null);
-    console.log("company", companygradedby_id, "grade", editGrade);
+    // console.log("company", companygradedby_id, "grade", editGrade);
   };
 
   // TOGGLE TO SEE IF GRADING IS SELECTED OR NOT
@@ -139,7 +140,8 @@ const Modal = ({ handleClose, card }) => {
       let count = parseInt(editCount);
       let value = parseInt(editPrice);
 
-      const response = await axios.post('http://localhost:5000/cards', { collection_id, card_id, companygradedby_id, grade_id, isfoil, count, value });
+      const baseURL = process.env.NODE_ENV === 'production' ? 'cards' : 'http://localhost:5000/cards';
+      const response = await axios.post(baseURL, { collection_id, card_id, companygradedby_id, grade_id, isfoil, count, value });
 
       console.log(response);
     } catch (error) {
