@@ -2,6 +2,7 @@ const express = require("express");
 const app = express(); // takes express library and run it
 const cors = require("cors");
 const pool = require("./db");
+require("dotenv").config();
 
 // MIDDLEWARE
 app.use(cors());// app.use to create middleware
@@ -748,7 +749,8 @@ app.get('/grade', async (req, res) => {
   }
 });
 
+const port = process.env.PORT;
 // LISTEN
-app.listen(5000, () => {// listen to port 5000
+app.listen(port, () => {// listen to port 5000
   console.log("server has started on port 5000");
 }); 
