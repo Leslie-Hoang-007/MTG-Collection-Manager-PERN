@@ -34,7 +34,7 @@ const logData = async function (data, req, res, next) {
 // APIS
 
 // GET A CARD
-app.get("/cards/:id", async (req, res) => {
+app.get("/api/cards/:id", async (req, res) => {
   try {
     const id = req.params.id;
 
@@ -52,7 +52,7 @@ app.get("/cards/:id", async (req, res) => {
 
 
 // GET SETS
-app.get("/sets", async (req, res) => {
+app.get("/api/sets", async (req, res) => {
   try {
 
     const sets = await pool.query("SELECT * FROM sets");
@@ -70,7 +70,7 @@ app.get("/sets", async (req, res) => {
 
 // GET ALL CARDS
 
-app.get("/cards", async (req, res) => {
+app.get("/api/cards", async (req, res) => {
   try {
     // const allCards = await pool.query("SELECT * From cards Limit 100");
 
@@ -151,7 +151,7 @@ app.get("/cards", async (req, res) => {
 
 
 // POST - All Cards In Collection + Collection Data
-app.post('/collection', async (req, res) => {
+app.post('/api/collection', async (req, res) => {
   try {
 
     const page = parseInt(req.body.page);
@@ -252,7 +252,7 @@ app.post('/collection', async (req, res) => {
 
 
 // GET - A CardInCollection
-app.get("/collection", async (req, res) => {
+app.get("/api/collection", async (req, res) => {
   try {
     const id = req.query.cardincollection_id;
     // console.log(id);
@@ -274,7 +274,7 @@ app.get("/collection", async (req, res) => {
 
 
 // POST - Add CardInCollection
-app.post('/cards', async (req, res) => {
+app.post('/api/cards', async (req, res) => {
   try {
 
     const user_id = req.body.user_id;
@@ -421,7 +421,7 @@ app.post('/cards', async (req, res) => {
 });
 
 // DELETE - A Card In Collection
-app.delete('/cards', async (req, res) => {
+app.delete('/api/cards', async (req, res) => {
   try {
 
     let logFront = "";
@@ -482,7 +482,7 @@ app.delete('/cards', async (req, res) => {
 
 // UPDATE CARD IN COLLECTION 
 
-app.put('/collection', async (req, res) => {
+app.put('/api/collection', async (req, res) => {
   try {
 
     const { cardincollection_id, collection_id, card_id, companygradedby_id, grade_id, isfoil, count, value } = req.body;
@@ -595,7 +595,7 @@ app.put('/collection', async (req, res) => {
 // ############## USER LOGIN AND REGISTRATION ########################
 
 // POST - REGISTE USER
-app.post('/register', async (req, res) => {
+app.post('/api/register', async (req, res) => {
   try {
 
     const { username, email, password } = req.body;
@@ -624,7 +624,7 @@ app.post('/register', async (req, res) => {
 });
 
 // POST - LOGIN
-app.post('/login', async (req, res) => {
+app.post('/api/login', async (req, res) => {
   try {
 
     const { email, password } = req.body;
@@ -669,7 +669,7 @@ app.post('/login', async (req, res) => {
 
 
 // POST - LOGIN
-app.put('/logout', async (req, res) => {
+app.put('/api/logout', async (req, res) => {
   try {
     const { user_id } = req.body;
     console.log(user_id);
@@ -742,7 +742,7 @@ app.post('/dashboard', async (req, res) => {
 });
 
 // GRADES
-app.get('/grade', async (req, res) => {
+app.get('/api/grade', async (req, res) => {
   try {
     const company = await pool.query("SELECT * FROM companygradedby");
     const grades = await pool.query("SELECT * FROM grades");
