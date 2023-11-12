@@ -25,7 +25,7 @@ export const Wishlist = () => {
 
     const fetchSets = async () => {
         try {
-            const baseURL = process.env.NODE_ENV === 'production' ? `sets` : `http://localhost:5000/sets`;
+            const baseURL = process.env.NODE_ENV === 'production' ? `/api/sets` : `http://localhost:5000/api/sets`;
             const response = await axios.get(baseURL);
             const data = response.data;
 
@@ -37,7 +37,7 @@ export const Wishlist = () => {
 
     const fetchCards = async () => {
         try {
-            const baseURL = process.env.NODE_ENV === 'production' ? `collection` : `http://localhost:5000/collection`;
+            const baseURL = process.env.NODE_ENV === 'production' ? `/api/collection` : `http://localhost:5000/api/collection`;
             const collection_id = cookies.wishlist_id;
             const response = await axios.post(
                 baseURL, {collection_id,page,limit,search,set_name,sortBy}
@@ -54,7 +54,7 @@ export const Wishlist = () => {
     const fetchDeleteCard = async (cardincollection_id) => {
         try {
             // console.log(cardincollection_id);
-            const baseURL = process.env.NODE_ENV === 'production' ? `cards` : `http://localhost:5000/cards`;
+            const baseURL = process.env.NODE_ENV === 'production' ? `/api/cards` : `http://localhost:5000/api/cards`;
             const response = await axios.delete(baseURL, {data:{cardincollection_id}});
             console.log(response);
             fetchCards();

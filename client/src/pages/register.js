@@ -35,7 +35,7 @@ export const Register = () => {
         }
 
         try {
-            const baseURL = process.env.NODE_ENV === 'production' ? "register" : "http://localhost:5000/register";
+            const baseURL = process.env.NODE_ENV === 'production' ? "/api/register" : "http://localhost:5000/api/register";
             const result = await axios.post(baseURL, {// fetch api
                 username,
                 email,

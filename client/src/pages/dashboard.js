@@ -36,7 +36,7 @@ export const Dashboard = () =>{
         // console.log(user_id);
         
         try {
-            const baseURL = process.env.NODE_ENV === 'production' ? "dashboard" : "http://localhost:5000/dashboard";
+            const baseURL = process.env.NODE_ENV === 'production' ? "/api/dashboard" : "http://localhost:5000/api/dashboard";
             const response = await axios.post(baseURL,{user_id});
             const data = response.data;
             setMessage("");

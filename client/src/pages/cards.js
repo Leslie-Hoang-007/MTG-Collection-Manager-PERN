@@ -42,7 +42,7 @@ export const Cards = () => {
 
     const fetchSets = async () => {
         try {
-            const baseURL = process.env.NODE_ENV === 'production' ? `sets` : `http://localhost:5000/sets`;
+            const baseURL = process.env.NODE_ENV === 'production' ? `/api/sets` : `http://localhost:5000/api/sets`;
 
             const response = await axios.get(
                 baseURL
@@ -78,7 +78,7 @@ export const Cards = () => {
     // GET CARDS
     const fetchCards = async () => {
         try {
-            const baseURL = process.env.NODE_ENV === 'production' ? `cards?page=${page}&limit=${limit}&search=${search}&set_name=${set_name}&sortBy=${sortBy}` : `http://localhost:5000/cards?page=${page}&limit=${limit}&search=${search}&set_name=${set_name}&sortBy=${sortBy}`;
+            const baseURL = process.env.NODE_ENV === 'production' ? `/api/cards?page=${page}&limit=${limit}&search=${search}&set_name=${set_name}&sortBy=${sortBy}` : `http://localhost:5000/api/cards?page=${page}&limit=${limit}&search=${search}&set_name=${set_name}&sortBy=${sortBy}`;
             const response = await axios.get(
                 baseURL
             );
@@ -96,7 +96,7 @@ export const Cards = () => {
     const fetchSaveCard = async (card_id, value) => {
         try {
             // console.log(user_id);
-            const baseURL = process.env.NODE_ENV === 'production' ? "cards" : "http://localhost:5000/cards";
+            const baseURL = process.env.NODE_ENV === 'production' ? "/api/cards" : "http://localhost:5000/api/cards";
             const collection_id = cookies.collection_id;
             const response = await axios.post(baseURL, { user_id, collection_id, card_id, value });
             console.log(response);
@@ -108,7 +108,7 @@ export const Cards = () => {
     // ADD TO WISHLIST
     const fetchSaveWishlistCard = async (card_id, value) => {
         try {
-            const baseURL = process.env.NODE_ENV === 'production' ? "cards" : "http://localhost:5000/cards";
+            const baseURL = process.env.NODE_ENV === 'production' ? "/api/cards" : "http://localhost:5000/api/cards";
             const collection_id = cookies.wishlist_id;
             const response = await axios.post(baseURL, { user_id, collection_id, card_id, value });
             console.log(response);
