@@ -11,7 +11,7 @@ export const Navbar = () => {
 
     const fetchLogout = async () =>{
         const user_id = cookies.access_token
-        const baseURL = process.env.NODE_ENV === 'production' ? 'logout' : 'http://localhost:5000/logout';
+        const baseURL = process.env.NODE_ENV === 'production' ? '/api/logout' : 'http://localhost:5000/api/logout';
         const response = await axios.put(baseURL,{user_id});
         console.log(response);
     };

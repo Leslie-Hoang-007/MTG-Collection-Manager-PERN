@@ -58,7 +58,7 @@ const Modal = ({ handleClose, card }) => {
   // FETCH GRADING COMPANY AND ALL GRADES
   const fetchGrades = async () => {
     try {
-      const baseURL = process.env.NODE_ENV === 'production' ? `grade` : `http://localhost:5000/grade`;
+      const baseURL = process.env.NODE_ENV === 'production' ? `/api/grade` : `http://localhost:5000/api/grade`;
       const response = await axios.get(baseURL);
       // console.log(response.data.companygradedby);
       setCompany(response.data.companygradedby);
@@ -140,7 +140,7 @@ const Modal = ({ handleClose, card }) => {
       let count = parseInt(editCount);
       let value = parseInt(editPrice);
 
-      const baseURL = process.env.NODE_ENV === 'production' ? 'cards' : 'http://localhost:5000/cards';
+      const baseURL = process.env.NODE_ENV === 'production' ? '/api/cards' : 'http://localhost:5000/api/cards';
       const response = await axios.post(baseURL, { collection_id, card_id, companygradedby_id, grade_id, isfoil, count, value });
 
       console.log(response);
