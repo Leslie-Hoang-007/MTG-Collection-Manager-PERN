@@ -42,8 +42,10 @@ export const Cards = () => {
 
     const fetchSets = async () => {
         try {
+            const baseURL = process.env.NODE_ENV === 'production' ? `sets` : `http://localhost:5000/sets`;
+
             const response = await axios.get(
-                `http://localhost:5000/sets`
+                baseURL
             );
             const data = response.data;
 
