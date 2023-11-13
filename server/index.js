@@ -700,7 +700,7 @@ app.put('/api/logout', async (req, res) => {
 
 
 // DASHBOARD 
-app.post('/dashboard', async (req, res) => {
+app.post('/api/dashboard', async (req, res) => {
   try {
     const user_id = req.body.user_id;
 

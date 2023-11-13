@@ -145,58 +145,80 @@ export const Collection = () => {
         setPage(1);
     };
 
+    const renderSearch = () => {
+        return (
+            <div className="search-container">
 
+
+                <div className="search-top">
+
+                    <div className="search-name">
+                        <img className="magnifyglass" src="https://upload.wikimedia.org/wikipedia/commons/5/55/Magnifying_glass_icon.svg"></img>
+                        <input
+                            placeholder="Search cards..."
+                            type="text"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+                    </div>
+                    <div className="search-set">
+                        <label>Set Name:</label>
+                        <select
+                            value={set_name}
+                            onChange={(e) => handleSetChange(e.target.value)}
+                        >
+                            <option value="">All Sets</option>
+                            {sets.map((setName) => (
+                                <option key={setName.id} value={setName.name}>{setName.name}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                </div>
+
+                <div className="search-display-option">
+                    <div>
+                        <label>Page Limit:</label>
+                        <select
+                            value={limit}
+                            onChange={(e) => setLimit(parseInt(e.target.value))}
+                        >
+                            <option value={30}>30</option>
+                            <option value={60}>60</option>
+                            <option value={120}>120</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label>Sort By:</label>
+                        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                            <option value="name-asc">Name (A-Z)</option>
+                            <option value="name-desc">Name (Z-A)</option>
+                            <option value="price-high">Price (High to Low)</option>
+                            <option value="price-low">Price (Low to High)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+        );
+    }
     return (
-        <div>
-            <h1>hello</h1>
-            <div>
-                <label>Search:</label>
-                <input
-                    type="text"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+        <main className="main">
+            <div className="container">
+                <div>
+                    {renderSearch()}
+                </div>
+                <div>
+                    {cards ? renderCardTable() : null}
+                </div>
+                <RenderPageNumbers
+                    page={page}
+                    totalPages={totalPages}
+                    handlePageChange={handlePageChange}
                 />
             </div>
-            <div>
-                <label>Set Name:</label>
-                <select
-                    value={set_name}
-                    onChange={(e) => handleSetChange(e.target.value)}
-                >
-                    <option value="">All Sets</option>
-                    {sets.map((setName) => (
-                        <option key={setName.id} value={setName.name}>{setName.name}</option>
-                    ))}
-                </select>
-            </div>
-            <div>
-                <label>Page Limit:</label>
-                <select
-                    value={limit}
-                    onChange={(e) => setLimit(parseInt(e.target.value))}
-                >
-                    <option value={30}>30</option>
-                    <option value={60}>60</option>
-                    <option value={120}>120</option>
-                </select>
-            </div>
-            <div>
-                <label>Sort By:</label>
-                <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-                    <option value="name-asc">Name (A-Z)</option>
-                    <option value="name-desc">Name (Z-A)</option>
-                    <option value="price-high">Price (High to Low)</option>
-                    <option value="price-low">Price (Low to High)</option>
-                </select>
-            </div>
-            <div>
-                {cards ? renderCardTable() : null}
-            </div>
-            <RenderPageNumbers
-                page={page}
-                totalPages={totalPages}
-                handlePageChange={handlePageChange}
-            />
-        </div>
+        </main>
+
     )
 };

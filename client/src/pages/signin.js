@@ -22,7 +22,7 @@ const Login = () => {
     const navigate = useNavigate();
 
     // REDIRECT TO SIGN UP
-    const redirectSignup = ()=>{navigate('/account/register')};
+    const redirectSignup = () => { navigate('/account/register') };
 
     // fetch login
     const handleSubmit = async (event) => {// async
@@ -35,13 +35,13 @@ const Login = () => {
                 password,
             });
             console.log(result.data.status);
-            if (result.data.user_id){
+            if (result.data.user_id) {
                 // window.localStorage.setItem("user_id", result.data.user_id);// set local sotrage to userid
                 setCookies("access_token", result.data.user_id);
                 setCookies("collection_id", result.data.collection_id);
                 setCookies("wishlist_id", result.data.wishlist_id);
                 navigate("/dashboard");// navigate to home page
-            }else{
+            } else {
                 // window.location.reload();
                 setAttempt(true);
             }
@@ -52,38 +52,46 @@ const Login = () => {
 
     let message;
 
-    if (attempt){
+    if (attempt) {
         message = <h1>Invalid Credientials</h1>;
     }
 
     return (
-        
-        <div className="auth-container">
-            {message}
-            <form onSubmit={handleSubmit}>
-                <h2>Login</h2>
-                <div className="form-group">
-                    <label htmlFor="email">Email address:</label>
-                    <input
-                        type="text"
-                        id="email"
-                        value={email}
-                        onChange={(event) => setEmail(event.target.value)}
-                    />
+        <main className="main">
+            <div className="container">
+                <div className="header-container">
+                    <h1>Sign in to your account</h1>
                 </div>
-                <div className="form-group">
-                    <label htmlFor="password">Password:</label>
-                    <input
-                        type="password"
-                        id="password"
-                        value={password}
-                        onChange={(event) => setPassword(event.target.value)}
-                    />
+
+                <div className="auth-container">
+                    {message}
+                    <form onSubmit={handleSubmit}>
+                        <div className="form-group">
+                            <label htmlFor="email">Email address:</label>
+                            <input
+                                type="text"
+                                id="email"
+                                value={email}
+                                onChange={(event) => setEmail(event.target.value)}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="password">Password:</label>
+                            <input
+                                type="password"
+                                id="password"
+                                value={password}
+                                onChange={(event) => setPassword(event.target.value)}
+                            />
+                        </div>
+                        <div className="form-group">
+
+                            <button type="submit" id ="signin">Sign in</button>
+                            <button onClick={redirectSignup} id = "register">Register</button>
+                        </div>
+                    </form>
                 </div>
-                <button type="submit">Login</button>
-                <button onClick={redirectSignup}>Sign Up</button>
-                
-            </form>
-        </div>
+            </div>
+        </main>
     );
 };

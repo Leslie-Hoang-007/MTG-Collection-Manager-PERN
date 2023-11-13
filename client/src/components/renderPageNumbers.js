@@ -12,14 +12,14 @@ const RenderPageNumbers = ({
         const endPage = Math.min(startPage + maxVisiblePages - 1, totalPages);
 
         pageNumbers.push(
-            <button
-                key="prev"
-                disabled={page === 1}
-                onClick={() => handlePageChange(page - 1)}
-                className="nonactive"
-            >
-                Previous
-            </button>
+            <li className="nonactive" id={page ===1 ? "disable": ""}>
+                <a
+                    key="prev"
+                    onClick={() => handlePageChange(page - 1)}
+                >
+                    Previous
+                </a>
+            </li>
         );
         if (endPage - startPage < maxVisiblePages - 1) {
             startPage = Math.max(1, endPage - maxVisiblePages + 1);
@@ -27,55 +27,63 @@ const RenderPageNumbers = ({
 
         if (startPage !== 1) {
             pageNumbers.push(
-                <button
-                    key="1"
-                    className="nonactive"
-                    onClick={() => handlePageChange(1)}
-                >
-                    1
-                </button>
+                <li className="nonactive">
+                    <a
+                        key="1"
+                        onClick={() => handlePageChange(1)}
+                    >
+                        1
+                    </a>
+                </li>
+
             );
             if (startPage > 2) {
-                pageNumbers.push(<span key="elips1" className="ellipsis">...</span>);
+                pageNumbers.push(<li key="elips1" className="ellipsis">...</li>);
             }
         }
 
         for (let i = startPage; i <= endPage; i++) {
             pageNumbers.push(
-                <button
-                    key={i}
-                    onClick={() => handlePageChange(i)}
-                    className={i === page ? "active" : "nonactive"}
+                <li className={i === page ? "active" : "nonactive"}
                 >
-                    {i}
-                </button>
+                    <a
+                        key={i}
+                        onClick={() => handlePageChange(i)}
+                    >
+                        {i}
+                    </a>
+
+                </li>
             );
         }
 
         if (endPage !== totalPages) {
             if (endPage < totalPages - 1) {
-                pageNumbers.push(<span key="elips2" className="ellipsis">...</span>);
+                pageNumbers.push(<li key="elips2" className="ellipsis">...</li>);
             }
             pageNumbers.push(
-                <button
-                    key={totalPages}
-                    className="nonactive"
-                    onClick={() => handlePageChange(totalPages)}
+                <li className="nonactive"
                 >
-                    {totalPages}
-                </button>
+                    <a
+                        key={totalPages}
+                        onClick={() => handlePageChange(totalPages)}
+                    >
+                        {totalPages}
+                    </a>
+
+                </li>
             );
         }
 
         pageNumbers.push(
-            <button
-                key="next"
-                disabled={page === totalPages}
-                onClick={() => handlePageChange(page + 1)}
-                className="nonactive"
-            >
-                Next
-            </button>
+            <li className="nonactive" id={page ===totalPages ? "disable": ""}>
+                <a
+                    key="next"
+                    onClick={() => handlePageChange(page + 1)}
+                >
+                    Next
+                </a>
+            </li>
         );
 
         return pageNumbers;
@@ -83,7 +91,10 @@ const RenderPageNumbers = ({
 
     return (
         <div className="pagination">
+            <ul>
             {renderPageNumbers()}
+
+            </ul>
         </div>
     );
 };

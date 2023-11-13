@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { useCookies } from "react-cookie";
+import RenderPageNumbers from "../components/renderPageNumbers";
 
 export const Wishlist = () => {
 
@@ -21,7 +22,7 @@ export const Wishlist = () => {
     useEffect(() => {
         fetchSets();
         fetchCards();
-    }, [page,search,set_name,limit,sortBy]);
+    }, [page, search, set_name, limit, sortBy]);
 
     const fetchSets = async () => {
         try {
@@ -40,7 +41,7 @@ export const Wishlist = () => {
             const baseURL = process.env.NODE_ENV === 'production' ? `/api/collection` : `http://localhost:5000/api/collection`;
             const collection_id = cookies.wishlist_id;
             const response = await axios.post(
-                baseURL, {collection_id,page,limit,search,set_name,sortBy}
+                baseURL, { collection_id, page, limit, search, set_name, sortBy }
             );
             const data = response.data;
             setCards(data.cards);
@@ -55,7 +56,7 @@ export const Wishlist = () => {
         try {
             // console.log(cardincollection_id);
             const baseURL = process.env.NODE_ENV === 'production' ? `/api/cards` : `http://localhost:5000/api/cards`;
-            const response = await axios.delete(baseURL, {data:{cardincollection_id}});
+            const response = await axios.delete(baseURL, { data: { cardincollection_id } });
             console.log(response);
             fetchCards();
         } catch (err) {
@@ -91,8 +92,8 @@ export const Wishlist = () => {
                                     </p>
                                 </div>
                             )} */}
-                            
-                            { card["image_uris.normal"] ? (
+
+                            {card["image_uris.normal"] ? (
                                 <img src={card["image_uris.normal"]} alt={card.name} />
                             ) : card.multiverse_ids && card.multiverse_ids.length > 0 ? (
                                 <img
@@ -112,7 +113,7 @@ export const Wishlist = () => {
                         </p>
                         <p>{card.count}</p>
                         <button
-                        onClick={() => fetchDeleteCard(card.cardincollection_id)}
+                            onClick={() => fetchDeleteCard(card.cardincollection_id)}
                         >-
                         </button>
                     </div>
@@ -140,120 +141,80 @@ export const Wishlist = () => {
         setSet_name(name);
         setPage(1);
     };
+    const renderSearch = () => {
+        return (
+            <div className="search-container">
 
-    const renderPageNumbers = () => {
-        let pageNumbers = [];
-        const maxVisiblePages = 7;
-        let startPage = Math.max(1, page - Math.floor(maxVisiblePages / 2));
-        const endPage = Math.min(startPage + maxVisiblePages - 1, totalPages);
 
-        pageNumbers.push(<button
-            key = "prev"
-            disabled={page === 1}
-            onClick={() => handlePageChange(page - 1)}
-            className="nonactive"
-        >
-            Previous
-        </button>);
-        if (endPage - startPage < maxVisiblePages - 1) {
-            startPage = Math.max(1, endPage - maxVisiblePages + 1);
-        }
+                <div className="search-top">
 
-        if (startPage !== 1) {
-            pageNumbers.push(
-                <button key="1" className="nonactive" onClick={() => handlePageChange(1)}>
-                    1
-                </button>
-            );
-            if (startPage > 2) {
-                pageNumbers.push(<span key ="elips1" className="ellipsis">...</span>);
-            }
-        }
+                    <div className="search-name">
+                        <img className="magnifyglass" src="https://upload.wikimedia.org/wikipedia/commons/5/55/Magnifying_glass_icon.svg"></img>
+                        <input
+                            placeholder="Search cards..."
+                            type="text"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+                    </div>
+                    <div className="search-set">
+                        <label>Set Name:</label>
+                        <select
+                            value={set_name}
+                            onChange={(e) => handleSetChange(e.target.value)}
+                        >
+                            <option value="">All Sets</option>
+                            {sets.map((setName) => (
+                                <option key={setName.id} value={setName.name}>{setName.name}</option>
+                            ))}
+                        </select>
+                    </div>
 
-        for (let i = startPage; i <= endPage; i++) {
-            pageNumbers.push(
-                <button
-                    key={i}
-                    onClick={() => handlePageChange(i)}
-                    className={i === page ? "active" : "nonactive"}
-                >
-                    {i}
-                </button>
-            );
-        }
+                </div>
 
-        if (endPage !== totalPages) {
-            if (endPage < totalPages - 1) {
-                pageNumbers.push(<span key ="elips2" className="ellipsis">...</span>);
-            }
-            pageNumbers.push(
-                <button key={totalPages} className="nonactive" onClick={() => handlePageChange(totalPages)} >
-                    {totalPages}
-                </button>
-            );
-        }
+                <div className="search-display-option">
+                    <div>
+                        <label>Page Limit:</label>
+                        <select
+                            value={limit}
+                            onChange={(e) => setLimit(parseInt(e.target.value))}
+                        >
+                            <option value={30}>30</option>
+                            <option value={60}>60</option>
+                            <option value={120}>120</option>
+                        </select>
+                    </div>
 
-        pageNumbers.push(<button
-            key= "next"
-            disabled={page === totalPages}
-            onClick={() => handlePageChange(page + 1)}
-            className="nonactive"
-        >
-            Next
-        </button>);
+                    <div>
+                        <label>Sort By:</label>
+                        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                            <option value="name-asc">Name (A-Z)</option>
+                            <option value="name-desc">Name (Z-A)</option>
+                            <option value="price-high">Price (High to Low)</option>
+                            <option value="price-low">Price (Low to High)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
 
-        return pageNumbers;
-    };
-
+        );
+    }
     return (
-        <div>
-            <h1>Wishlist</h1>
-            <div>
-                <label>Search:</label>
-                <input
-                    type="text"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+        <main className="main">
+            <div className="container">
+                <div>
+                    {renderSearch()}
+                </div>
+                <div>
+                    {cards ? renderCardTable() : null}
+                </div>
+                <RenderPageNumbers
+                    page={page}
+                    totalPages={totalPages}
+                    handlePageChange={handlePageChange}
                 />
             </div>
-            <div>
-                <label>Set Name:</label>
-                <select
-                    value={set_name}
-                    onChange={(e) => handleSetChange(e.target.value)}
-                >
-                    <option value="">All Sets</option>
-                    {sets.map((setName) => (
-                        <option key={setName.id} value={setName.name}>{setName.name}</option>
-                    ))}
-                </select>
-            </div>
-            <div>
-                <label>Page Limit:</label>
-                <select
-                    value={limit}
-                    onChange={(e) => setLimit(parseInt(e.target.value))}
-                >
-                    <option value={30}>30</option>
-                    <option value={60}>60</option>
-                    <option value={120}>120</option>
-                </select>
-            </div>
-            <div>
-                <label>Sort By:</label>
-                <select value={sortBy} onChange={(e)=> setSortBy(e.target.value)}>
-                    <option value="name-asc">Name (A-Z)</option>
-                    <option value="name-desc">Name (Z-A)</option>
-                    <option value="price-high">Price (High to Low)</option>
-                    <option value="price-low">Price (Low to High)</option>
-                </select>
-            </div>
-            <div>
-                {cards ? renderCardTable(): null}
-            </div>
-            <div className="pagination">
-                {renderPageNumbers()}
-            </div>
-        </div>
+        </main>
+
     )
 };

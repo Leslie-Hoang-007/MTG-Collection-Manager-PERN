@@ -1,62 +1,142 @@
-import { Link, useNavigate } from "react-router-dom";
+import React from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useCookies } from "react-cookie";
 import axios from "axios";
 
 export const Navbar = () => {
     // cookies
-    const [cookies, setCookies] = useCookies(["access_token"])
-
+    const [cookies, setCookies] = useCookies(["access_token"]);
     const navigate = useNavigate();
+    const location = useLocation();
 
+    // Function to handle logout
+    const fetchLogout = async () => {
+        const user_id = cookies.access_token;
+        const baseURL =
+            process.env.NODE_ENV === "production"
+                ? "/api/logout"
+                : "http://localhost:5000/api/logout";
+        const response = await axios.put(baseURL, { user_id });
+        // console.log(response);
+        navigate("/");
 
-    const fetchLogout = async () =>{
-        const user_id = cookies.access_token
-        const baseURL = process.env.NODE_ENV === 'production' ? '/api/logout' : 'http://localhost:5000/api/logout';
-        const response = await axios.put(baseURL,{user_id});
-        console.log(response);
     };
-    // logout
+
     const logout = () => {
+        setCookies("access_token", "");
+        setCookies("collection_id", "");
+        setCookies("wishlist_id", "");
+        window.localStorage.clear();
         fetchLogout();
-        setCookies("access_token", "");  // set cookies to ""
-        setCookies("collection_id", "");  // set cookies to ""
-        setCookies("wishlist_id", "");  // set cookies to ""
-        window.localStorage.clear(); // clear local storage
-        navigate("/");// navigate to auth page
     };
 
-    return (<div className="navbarbg">
-        <div className="navbar">
-            <Link to="/" className="custom-link">MTGCollector</Link>
-            <Link to="/dashboard" className="custom-link">Dashboard</Link>
-            <Link to="/cards" className="custom-link">Cards</Link>
+    // Function to check if a link is active
+    const isActive = (path) => {
+        return location.pathname === path;
+    };
 
-            {!cookies.access_token && (
-                <Link to="/account/register" className="custom-link">Register</Link>
-            )
-            }
+    return (
+        <div className="navbar" id="navbar-sticky">
+            <div className="container">
+                <div className="navbar-content">
+                    {/* Logo */}
+                    <Link to="/" className="custom-link" id="logo">
+                        <img
+                            className="logo"
+                            src={process.env.PUBLIC_URL + "/logo.png"}
+                            alt="logo MTG Collection Manager"
+                        />
+                    </Link>
 
-            {!cookies.access_token && (
-                <Link to="/account/signin" className="custom-link">Login</Link>
-            )}
+                    {/* Navigation Links */}
+                    <ul id="navbar-menu">
+                        <li className="navbar-item">
+                            <Link
+                                to="/"
+                                className={`custom-link`}
+                                id="logo"
+                            >
+                                MTGCollector
+                            </Link>
+                        </li>
+                        <li className="navbar-item">
+                            <Link
+                                to="/dashboard"
+                                className={`custom-link ${isActive("/dashboard") ? "active" : ""}`}
+                            >
+                                Dashboard
+                            </Link>
+                        </li>
+                        <li className="navbar-item">
+                            <Link
+                                to="/cards"
+                                className={`custom-link ${isActive("/cards") ? "active" : ""}`}
+                            >
+                                Cards
+                            </Link>
+                        </li>
+                        {cookies.access_token && (
+                            <>
+                                <li className="navbar-item">
+                                    <Link
+                                        to="/collection"
+                                        className={`custom-link ${isActive("/collection") ? "active" : ""}`}
+                                    >
+                                        Collection
+                                    </Link>
+                                </li>
+                                <li className="navbar-item">
+                                    <Link
+                                        to="/wishlist"
+                                        className={`custom-link ${isActive("/wishlist") ? "active" : ""}`}
+                                    >
+                                        Wishlist
+                                    </Link>
+                                </li>
+                            </>
+                        )}
+                        <li className="navbar-item">
+                            <Link
+                                to="/premium"
+                                className={`custom-link ${isActive("/premium") ? "active" : ""}`}
+                            >
+                                Premium
+                            </Link>
+                        </li>
+                    </ul>
 
-            {cookies.access_token && (
-                <>
-                    <Link to="/collection" className="custom-link">Collection</Link>
-                    <Link to="/wishlist" className="custom-link">Wishlist</Link>
-                </>
-            )}
-
-            <Link to="/premium" className="custom-link">Premium</Link>
-
-            {cookies.access_token && (
-                <button onClick={logout} className="custom-link">
-                    Logout
-                </button>
-            )}
-
+                    {/* Login/Logout Links */}
+                    <ul className="nav-login">
+                        <li className="navbar-item">
+                            {!cookies.access_token && (
+                                <Link
+                                    to="/account/register"
+                                    className={`custom-link ${isActive("/account/register") ? "active" : ""}`}
+                                >
+                                    Register
+                                </Link>
+                            )}
+                        </li>
+                        <li className="navbar-item">
+                            {!cookies.access_token && (
+                                <Link
+                                    to="/account/signin"
+                                    className={`custom-link ${isActive("/account/signin") ? "active" : ""}`}
+                                >
+                                    Sign in
+                                </Link>
+                            )}
+                        </li>
+                        <li className="navbar-item">
+                            {cookies.access_token && (
+                                <Link onClick={logout} className="custom-link">
+                                    Sign out
+                                </Link>
+                            )}
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </div>
-
-    </div>
     );
 };

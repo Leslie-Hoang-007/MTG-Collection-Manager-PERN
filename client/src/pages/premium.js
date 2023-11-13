@@ -16,7 +16,8 @@ export const Premium = () => {
 
 
     return (
-        <div>
+        <main className="main">
+        <div className="container">
             <h1>Go for premium</h1>
             <p>
                 Keep track of your Magic the Gathering card collection without any limits.
@@ -110,5 +111,6 @@ export const Premium = () => {
                 </table>
             </div>
         </div>
+        </main>
     );
 };

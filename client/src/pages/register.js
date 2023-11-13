@@ -17,6 +17,8 @@ export const Register = () => {
     const [error, setError] = useState("");
 
 
+    // REDIRECT TO SIGN UP
+    const redirectSignup = () => { navigate('/account/signin') };
     // Navigation
     const navigate = useNavigate();
 
@@ -27,10 +29,10 @@ export const Register = () => {
         if (email !== cEmail) {
             setError("Email and email confirmation do not match.");
             return; // EXIT
-        }else if(password !== cPassword){
+        } else if (password !== cPassword) {
             setError("Passwords do not match.");
             return; // EXIT
-        }else{
+        } else {
             setError("");
         }
 
@@ -41,12 +43,12 @@ export const Register = () => {
                 email,
                 password,
             });
-            if (result.data.status == "EMAIL ADDRESS IN USE"){
+            if (result.data.status == "EMAIL ADDRESS IN USE") {
                 setError("This email address is already in use.");
                 return;
             }
             if (result.data.status == "ACCOUNT CREATION SUCCESSFUL") {
-                setCookies("access_token",result.data.user_id);
+                setCookies("access_token", result.data.user_id);
                 setCookies("collection_id", result.data.collection_id);
                 setCookies("wishlist_id", result.data.wishlist_id);
 
@@ -61,57 +63,68 @@ export const Register = () => {
 
     return (
 
-        <div className="auth-container">
-            <form onSubmit={handleSubmit}>
-                <h2>Register</h2>
-                {error && <p className="error-message">{error}</p>}
-                <div className="form-group">
-                    <label htmlFor="username">Username:</label>
-                    <input
-                        type="text"
-                        id="username"
-                        value={username}
-                        onChange={(event) => setUsername(event.target.value)}
-                    />
+        <main className="main">
+            <div className="container">
+                <div className="header-container">
+                    <h1>Register an account</h1>
+
                 </div>
-                <div className="form-group">
-                    <label htmlFor="email">Email address:</label>
-                    <input
-                        type="text"
-                        id="email"
-                        value={email}
-                        onChange={(event) => setEmail(event.target.value)}
-                    />
+                <div className="auth-container">
+                    <form onSubmit={handleSubmit}>
+                        {error && <p className="error-message">{error}</p>}
+                        <div className="form-group">
+                            <label htmlFor="username">Username:</label>
+                            <input
+                                type="text"
+                                id="username"
+                                value={username}
+                                onChange={(event) => setUsername(event.target.value)}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="email">Email address:</label>
+                            <input
+                                type="text"
+                                id="email"
+                                value={email}
+                                onChange={(event) => setEmail(event.target.value)}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="cemail">Email address confirmation:</label>
+                            <input
+                                type="text"
+                                id="cEmail"
+                                value={cEmail}
+                                onChange={(event) => setCEmail(event.target.value)}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="password">Password:</label>
+                            <input
+                                type="password"
+                                id="password"
+                                value={password}
+                                onChange={(event) => setPassword(event.target.value)}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="password">Confirm Password:</label>
+                            <input
+                                type="password"
+                                id="cPassword"
+                                value={cPassword}
+                                onChange={(event) => setCPassword(event.target.value)}
+                            />
+
+                        </div>
+                        <div className="form-group">
+                            <button type="submit" id="signin" >Create my account!</button>
+                            <button onClick={redirectSignup} id="register">Sign in</button>
+                        </div>
+                    </form>
                 </div>
-                <div className="form-group">
-                    <label htmlFor="cemail">Email address confirmation:</label>
-                    <input
-                        type="text"
-                        id="cEmail"
-                        value={cEmail}
-                        onChange={(event) => setCEmail(event.target.value)}
-                    />
-                </div>
-                <div className="form-group">
-                    <label htmlFor="password">Password:</label>
-                    <input
-                        type="password"
-                        id="password"
-                        value={password}
-                        onChange={(event) => setPassword(event.target.value)}
-                    />
-                </div>
-                <div className="form-group">
-                    <label htmlFor="password">Confirm Password:</label>
-                    <input
-                        type="password"
-                        id="cPassword"
-                        value={cPassword}
-                        onChange={(event) => setCPassword(event.target.value)}
-                    />
-                </div>
-                <button type="submit">Login</button>
-            </form>
-        </div>
+            </div>
+        </main>
     );
 };
