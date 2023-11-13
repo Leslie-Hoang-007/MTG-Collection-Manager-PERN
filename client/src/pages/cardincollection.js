@@ -30,7 +30,7 @@ export const CardInCollection = () => {
 
     const fetchCard = async () => {
         try {
-            console.log(cardincollection_id);
+            // console.log(cardincollection_id);
             const baseURL = process.env.NODE_ENV === 'production' ? `/api/collection?cardincollection_id=${cardincollection_id}` : `http://localhost:5000/api/collection?cardincollection_id=${cardincollection_id}`;
             const response = await axios.get(baseURL);
             // const data = response.data;
@@ -60,22 +60,17 @@ export const CardInCollection = () => {
     // CHANGES CARD PRICE IN COLLECTON
     const handleUpdate = async () => {
 
-        
-      // ERROR HANDELING FOR GRADINGCOMPAN AND GRADE
+        console.log(editGrade,editCompany);
+        // ERROR HANDELING FOR GRADINGCOMPAN AND GRADE
         if (editGrade || editCompany) {
             if (!editGrade) {
-                // setEditCompany(null);
-                return;
+                setEditCompany(null);
+                setEditGrade(null);
+
             }
             if (!editCompany) {
-                // setEditGrade(null);
-                return;
+                setEditGrade(null);
             }
-        }
-
-        // HANDLE IF NOTHING IS CHANGED THAN DO NOTHING WHEN CLICKED
-        if (!editGrade && !editCompany && !editFoil && !editCount && !editPrice) {
-            return;
         }
 
         // FETCH - UPDATE STATS
@@ -112,7 +107,7 @@ export const CardInCollection = () => {
     const renderCondition = () => {
         let x =
             <div>
-     
+
                 <select onChange={(e) => handleCompany(e.target.value)}>
                     <option value="">Select a Company</option>
                     {company.map((company) => (
@@ -121,7 +116,7 @@ export const CardInCollection = () => {
                         </option>
                     ))}
                 </select>
-        
+
                 <select onChange={(e) => setEditGrade(e.target.value, console.log(editCompany, e.target.value))}>
                     <option value="">Select a Grade</option>
                     {filteredGrades.map((grade) => (
@@ -137,11 +132,11 @@ export const CardInCollection = () => {
 
     const handleToggle = (checked) => {
         setCardCondition(checked);
-        if (!checked){
-            setEditCompany(888);
-            setEditGrade(888);
+        if (!checked) {
+            setEditCompany(null);
+            setEditGrade(null);
         }
-      };
+    };
 
     // Once the data is loaded, you can display it on the page
     return (
@@ -174,8 +169,8 @@ export const CardInCollection = () => {
                     id="xxx"
                 />
                 <label>Graded card</label>
-                {cardCondition ? renderCondition(): null}
-                
+                {cardCondition ? renderCondition() : null}
+
             </div>
 
 
@@ -197,7 +192,7 @@ export const CardInCollection = () => {
                 <input type="text" value={editPrice} onChange={(e) => setEditPrice(e.target.value)} />
             </label>
 
-            <button onClick={handleUpdate}>Save Update</button>
+            <button onClick={handleUpdate} disabled={(editGrade == null || editGrade == "") && (editFoil == null || editFoil == "") && (editCount == null || editCount=="") && (editPrice === null || editPrice=="")}>Save Update</button>
         </div>
     );
 };

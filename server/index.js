@@ -13,16 +13,16 @@ app.use(express.json());// get data from client side from req.body objext
 const logData = async function (data, req, res, next) {
   try {
 
-    let { user_id, log, card_id, cardincollection_id,admin } = data;
+    let { user_id, log, card_id, cardincollection_id, admin } = data;
     const date = new Date();
     const options = { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', timeZoneName: 'short' };
     const date_time = new Intl.DateTimeFormat('en-US', options).format(date);
     // Use await to wait for the database query to complete
     const result = await pool.query(
       "INSERT INTO logs (user_id, log, date_time, card_id, cardincollection_id,admin) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
-      [user_id, log, date_time, card_id, cardincollection_id,admin]
+      [user_id, log, date_time, card_id, cardincollection_id, admin]
     );
-
+    console.log(data);
     // console.log(result.rows[0]); // Log the query result
     next();
   } catch (error) {
@@ -283,10 +283,8 @@ app.post('/api/cards', async (req, res) => {
     const companygradedby_id = req.body.companygradedby_id;
     const grade_id = req.body.grade_id;
     const isfoil = req.body.isfoil;
-    const count = req.body.count;
+    let count = req.body.count;
     const value = req.body.value;
-
-
 
     // SELECT CARD
     let searchCard = "SELECT * FROM cards WHERE id = $1";
@@ -295,30 +293,47 @@ app.post('/api/cards', async (req, res) => {
     // LOG
     let logFront = "";
     let logBack = "";
-    logBack += card.rows[0].name + " - " + card.rows[0].set_name + "(Card #" + card.rows[0].collector_number + ") ";
+
+    if (count == null) {
+      count = 1;
+    }
+
+
+
 
     // SEARCH IF CARDINCOLLEC;TION ALREADY EXISTS
     let searchQueryCardInCollection = "SELECT * FROM cardincollection cc JOIN cards ca ON cc.card_id = ca.id WHERE cc.collection_id = $1 AND cc.card_id = $2"
     let searchQueryCounter = 2;
     let searchValues = [collection_id, card_id]
 
-    if (isfoil) {
+
+    console.log(isfoil);
+    if (isfoil == 'true') {
       searchQueryCounter++;
       searchQueryCardInCollection += " AND isfoil = $" + searchQueryCounter;
       searchValues.push(isfoil);
-      logBack += "Foil ";
+      logBack += "Foil card ";
     } else {
-      logBack += "Non-foil ";
+      logBack += "Normal card ";
     }
+
+
+
+    logBack += "of " + card.rows[0].name + " - " + card.rows[0].set_name + "(Card #" + card.rows[0].collector_number + ") ";
+
+
     if (companygradedby_id && grade_id) {
+      const gradeName = await pool.query("SELECT * FROM grades WHERE grade_id = $1", [grade_id])
       searchQueryCounter++;
       searchQueryCardInCollection += " AND companygradedby_id = $" + searchQueryCounter + " AND grade_id = $";
       searchValues.push(companygradedby_id);
       searchQueryCounter++;
       searchQueryCardInCollection += searchQueryCounter;
       searchValues.push(grade_id);
-      logBack += "- " + grade_id + " - ";
+      console.log(grade_id);
+      logBack += "- " + gradeName.rows[0].grade_description + " - ";
     }
+
     if (value) {
       searchQueryCounter++;
       searchQueryCardInCollection += " AND value = $" + searchQueryCounter
@@ -327,16 +342,15 @@ app.post('/api/cards', async (req, res) => {
 
     const searchCardInCollection = await pool.query(searchQueryCardInCollection, searchValues);
 
-
     if (searchCardInCollection.rows.length > 0) {
       const cardincollection_id = searchCardInCollection.rows[0].cardincollection_id;
-      const updateCount = searchCardInCollection.rows[0].count + 1
+      const updateCount = searchCardInCollection.rows[0].count + count;
       const updateQuery = "UPDATE cardincollection SET count = $1 WHERE cardincollection_id = $2";
 
       await pool.query(updateQuery, [updateCount, cardincollection_id]);
 
       // LOGS ACTION
-      logFront += "Increased the quantity of ";
+      logFront = "Increased the quantity ";
 
       logBack += "from " + searchCardInCollection.rows[0].count + " to " + updateCount + ".";
 
@@ -344,8 +358,9 @@ app.post('/api/cards', async (req, res) => {
       const data = ({
         user_id: user_id,
         log: log,
-        card_id: card.id,
-        cardincollection_id: cardincollection_id
+        card_id: card_id,
+        cardincollection_id: cardincollection_id,
+        admin: false
       });
 
       logData(data, req, res, () => {
@@ -356,7 +371,6 @@ app.post('/api/cards', async (req, res) => {
     } else
     // ELSE CREATE CardInCollection
     {
-
       let query = "INSERT INTO cardincollection (collection_id, card_id";
       let paramCounter = 2;
       let paramValues = " VALUES ($1, $2";
@@ -398,14 +412,15 @@ app.post('/api/cards', async (req, res) => {
       console.log(results.rows[0]);
 
       // LOG
-      logFront += "Added ";
+      logFront += "Added " + count + " ";
       logBack += "to collection.";
       const log = logFront + logBack;
       const data = ({
         user_id: user_id,
         log: log,
-        card_id: card.id,
-        cardincollection_id: results.rows[0].cardincollection_id
+        card_id: card_id,
+        cardincollection_id: results.rows[0].cardincollection_id,
+        admin: false
       });
 
       logData(data, req, res, () => {
@@ -443,7 +458,8 @@ app.delete('/api/cards', async (req, res) => {
       const data = ({
         user_id: user_id,
         log: log,
-        cardincollection_id: cardincollection_id
+        cardincollection_id: cardincollection_id,
+        admin: false
       });
       logData(data, req, res, () => {
 
@@ -463,11 +479,11 @@ app.delete('/api/cards', async (req, res) => {
       const data = ({
         user_id: user_id,
         log: log,
-        card_id: card.rows[0].id
+        card_id: card.rows[0].id,
+        admin: false
       });
 
       logData(data, req, res, () => {
-
         res.json({ status: "DELETE CARD IN COLLECTION SUCCESSFUL" });
       });
 
@@ -486,6 +502,8 @@ app.put('/api/collection', async (req, res) => {
   try {
 
     const { cardincollection_id, collection_id, card_id, companygradedby_id, grade_id, isfoil, count, value } = req.body;
+
+
     // console.log(cardincollection_id, collection_id,card_id,companygradedby_id,grade_id,isfoil,count,value);
     // Search
     // const card = await pool.query("SELECT * FROM cardincollection WHERE carcincollection_id = "+ cardincollection_id);
@@ -526,28 +544,36 @@ app.put('/api/collection', async (req, res) => {
 
     // console.log(req.body);
     // UPDATE
+    let logFront = "Changed";
+    let logBack = "";
     let query = "UPDATE cardincollection SET"
     let numberOfParams = 0;
     let params = [];
-    if (companygradedby_id && grade_id) {
-      if (companygradedby_id == 888 || grade_id == 888) {
-        numberOfParams++;
-        query += " companygradedby_id = $" + numberOfParams + " , grade_id = $";
-        params.push(null);
-        numberOfParams++;
-        query += numberOfParams;
-        params.push(null);
-      } else {
-        numberOfParams++;
-        query += " companygradedby_id = $" + numberOfParams + " , grade_id = $";
-        params.push(companygradedby_id);
-        numberOfParams++;
-        query += numberOfParams;
-        params.push(grade_id);
-      }
 
+    const searchCard = "SELECT * FROM cardincollection cc JOIN cards c ON cc.card_id = c.id JOIN collection col ON cc.collection_id = col.collection_id JOIN users u ON col.user_id = u.user_id WHERE cc.cardincollection_id = $1";
+    const card = await pool.query(searchCard, [cardincollection_id]);
+    logBack += " of " + card.rows[0].name + " - " + card.rows[0].set_name + "(Card #" + card.rows[0].collector_number + ") ";
+
+    const cur_count = " " + card.rows[0].count;;
+    let cur_variant;
+
+    if (card.rows[0].isfoil == false) {
+      cur_variant = " Normal";
+    } else {
+      cur_variant = " Foil";
     }
-    if (isfoil) {
+
+    if (count) {
+      numberOfParams++;
+      query += " count = $" + numberOfParams
+      params.push(count);
+      logFront += cur_count + cur_variant + " to " + count;
+    } else {
+      logFront += cur_count + cur_variant;
+    }
+
+    if (isfoil == "true") {
+      console.log("asdasdff");
       numberOfParams++;
       if (numberOfParams == 1) {
         query += " isfoil = $" + numberOfParams;
@@ -555,35 +581,96 @@ app.put('/api/collection', async (req, res) => {
         query += ", isfoil = $" + numberOfParams;
       }
       params.push(isfoil);
+      if (count) {
+        logFront += " Foil";
+      } else {
+        logFront += " to" + cur_count + " Foil";
+      }
+    } else if (isfoil == "false") {
+      numberOfParams++;
+      if (numberOfParams == 1) {
+        query += " isfoil = $" + numberOfParams;
+      } else {
+        query += ", isfoil = $" + numberOfParams;
+      }
+      params.push(isfoil);
+      if (count) {
+        logFront += " Normal";
+      } else {
+        logFront += " to" + cur_count + " Normal";
+      }
+    } else if (count) {
+      logFront += cur_variant;
     }
+
+
+    if (companygradedby_id && grade_id) {
+      numberOfParams++;
+      const grade_description = await pool.query("SELECT * FROM grades WHERE grade_id = $1", [grade_id]);
+      const grade_desc = grade_description.rows[0].grade_description;
+
+      if (numberOfParams == 1) {
+        query += " companygradedby_id = $" + numberOfParams + " , grade_id = $";
+
+        // edit log depending if grade was there before
+        if (card.rows[0].grade_id == null) {
+          logFront += " grade to " + grade_desc;
+        } else {
+          const prev_grade_description = await pool.query("SELECT * FROM grades WHERE grade_id = $1", [card.rows[0].grade_id]);
+          const prev_grade_desc = prev_grade_description.rows[0].grade_description;
+          logFront += " grade from " + prev_grade_desc + " to " + grade_desc;
+        }
+
+      } else {
+        query += ", companygradedby_id = $" + numberOfParams + " , grade_id = $";
+
+        // edit log depending if grade was there before
+        if (card.rows[0].grade_id == null) {
+          logFront += ", the grade to " + grade_desc;
+        } else {
+          const prev_grade_description = await pool.query("SELECT * FROM grades WHERE grade_id = $1", [card.rows[0].grade_id]);
+          const prev_grade_desc = prev_grade_description.rows[0].grade_description;
+          logFront += ", the grade from " + prev_grade_desc + " to " + grade_desc;
+        }
+      }
+
+      params.push(companygradedby_id);
+      numberOfParams++;
+      query += numberOfParams;
+      params.push(grade_id);
+    }
+
     if (value) {
       numberOfParams++;
       if (numberOfParams == 1) {
         query += " value = $" + numberOfParams
+        logFront += " the value to " + value;;
       } else {
         query += ", value = $" + numberOfParams
+        logFront += ", the value to " + value;;
+
       }
       params.push(value);
     }
-    if (count >= 1) {
-      numberOfParams++;
-      if (numberOfParams == 1) {
-        query += " count = $" + numberOfParams
-      } else {
-        query += ", count = $" + numberOfParams
-      }
-      params.push(count);
-    }
-
-    console.log(query);
     numberOfParams++;
     query += " WHERE cardincollection_id = $" + numberOfParams;
-    console.log(query);
     params.push(cardincollection_id);
     // console.log(query,params);
     await pool.query(query, params);
 
-    res.json({ staus: "CARDINCOLLECTION UPDATED SUCCESS" })
+
+    const log = logFront + logBack;
+
+    const data = ({
+      user_id: card.rows[0].user_id,
+      log: log,
+      card_id: card.rows[0].id,
+      admin: false
+    });
+
+    logData(data, req, res, () => {
+      res.json({ staus: "CARDINCOLLECTION UPDATED SUCCESS" })
+    });
 
   } catch (err) {
     console.error(err.message);
@@ -615,7 +702,17 @@ app.post('/api/register', async (req, res) => {
       const collection = await pool.query("INSERT INTO collection (user_id,wishlist) VALUES ($1,$2) RETURNING *", [user.rows[0].user_id, false])
       const wishlist = await pool.query("INSERT INTO collection (user_id,wishlist) VALUES ($1,$2) RETURNING *", [user.rows[0].user_id, true])
 
-      res.json({ status: "ACCOUNT CREATION SUCCESSFUL", user_id: user.rows[0].user_id, collection_id: collection.rows[0].collection_id, wishlist_id: wishlist.rows[0].collection_id });
+      const log = email + " Created an account successfully";
+    
+      const data = ({
+        user_id: user.rows[0].user_id,
+        log: log,
+        admin: true
+      });
+
+      logData(data, req, res, () => {
+        res.json({ status: "ACCOUNT CREATION SUCCESSFUL", user_id: user.rows[0].user_id, collection_id: collection.rows[0].collection_id, wishlist_id: wishlist.rows[0].collection_id });
+      });
     }
   } catch (err) {
     console.error(err.message);
@@ -639,12 +736,12 @@ app.post('/api/login', async (req, res) => {
         const collection_id = await pool.query("SELECT collection_id FROM collection WHERE wishlist = false AND user_id = $1", [resultSearch.rows[0].user_id]);
         const wishlist_id = await pool.query("SELECT collection_id FROM collection WHERE wishlist = true AND user_id = $1", [resultSearch.rows[0].user_id]);
 
-        const log = resultSearch.rows[0].username + "Logged in successfully";
+        const log = resultSearch.rows[0].email + " Logged in successfully";
 
         const data = ({
           user_id: resultSearch.rows[0].user_id,
           log: log,
-          admin:true
+          admin: true
         });
 
         logData(data, req, res, () => {
@@ -654,7 +751,7 @@ app.post('/api/login', async (req, res) => {
             wishlist_id: wishlist_id.rows[0].collection_id
           });
         });
-       
+
       } else {
         res.json({ status: "INVALID PASSWORD" });
       }
@@ -668,7 +765,7 @@ app.post('/api/login', async (req, res) => {
 });
 
 
-// POST - LOGIN
+// PUT - LOGOUT
 app.put('/api/logout', async (req, res) => {
   try {
     const { user_id } = req.body;
@@ -678,20 +775,20 @@ app.put('/api/logout', async (req, res) => {
 
     const resultSearch = await pool.query(querySearchUser, [user_id]);
     console.log(resultSearch.rows[0]);
-    const log = resultSearch.rows[0].username + " Logged out successfully";
+    const log = resultSearch.rows[0].email + " Logged out successfully";
 
-        const data = ({
-          user_id: resultSearch.rows[0].user_id,
-          log: log,
-          admin:true
-        });
+    const data = ({
+      user_id: resultSearch.rows[0].user_id,
+      log: log,
+      admin: true
+    });
 
-        logData(data, req, res, () => {
-          res.json({
-            status: "LOGOUT SUCCESSFUL", user_id: user_id
-            
-          });
-        });
+    logData(data, req, res, () => {
+      res.json({
+        status: "LOGOUT SUCCESSFUL", user_id: user_id
+
+      });
+    });
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ error: 'Interal Server Error' })
@@ -755,6 +852,38 @@ app.get('/api/grade', async (req, res) => {
     res.status(500).send('Server Error');
   }
 });
+
+// GET LOG FROM USER
+app.get("/api/logs/", async (req, res) => {
+  try {
+    const user_id = req.query.user_id;
+    const logs = await pool.query("SELECT * FROM logs WHERE user_id = $1 ORDER BY date_time DESC", [user_id])
+    
+    res.json({
+      logs: logs
+    });
+
+  } catch (err) {
+    console.log(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// Get LOG FOR ADMIN
+// app.get('/api/logs', async (req, res) => {
+//   try {
+//     const company = await pool.query("SELECT * FROM companygradedby");
+//     const grades = await pool.query("SELECT * FROM grades");
+//     res.json({
+//       companygradedby: company.rows,
+//       grades: grades.rows
+//     });
+//   } catch (err) {
+//     console.error(err.message);
+//     res.status(500).send('Server Error');
+//   }
+// });
+
 
 const port = process.env.PORT;
 // LISTEN

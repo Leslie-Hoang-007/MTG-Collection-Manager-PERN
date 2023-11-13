@@ -217,7 +217,7 @@ td {
 .search-name input {
   border: 1px solid #cfcfcf;
   padding-right: 0px;
-  padding-left: calc(0.75rem + 1.5em);
+  padding-left: 2em;
   padding-bottom: auto;
   padding-top: auto;
   width: 12rem;

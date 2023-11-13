@@ -34,6 +34,7 @@ const Modal = ({ handleClose, card }) => {
   
   const [cookies, _] = useCookies();
 
+  const user_id = cookies.access_token;
   const card_id = card.id;
   const collection_id = cookies.collection_id;
 
@@ -81,8 +82,8 @@ const Modal = ({ handleClose, card }) => {
   const handleToggle = (checked) => {
     setCardCondition(checked);
     if (!checked) {
-      setEditCompany(888);
-      setEditGrade(888);
+      setEditCompany(null);
+      setEditGrade(null);
     }
   };
 
@@ -90,7 +91,6 @@ const Modal = ({ handleClose, card }) => {
   const renderCondition = () => {
     let x =
       <div>
-
         <select onChange={(e) => handleCompany(e.target.value)}>
           <option value="">Select a Company</option>
           {company.map((company) => (
@@ -121,18 +121,15 @@ const Modal = ({ handleClose, card }) => {
     // ERROR HANDELING FOR GRADINGCOMPAN AND GRADE
     if (editGrade || editCompany) {
       if (!editGrade) {
-        // setEditCompany(null);
-        return;
+        setEditCompany(null);
+        setEditGrade(null);
+
       }
       if (!editCompany) {
-        // setEditGrade(null);
-        return;
+        setEditGrade(null);
       }
     }
 
-    if (!editGrade && !editCompany && !editFoil && !editCount && !editPrice) {
-      return;
-    }
     try {
       let companygradedby_id = editCompany;
       let grade_id = editGrade;
@@ -141,7 +138,7 @@ const Modal = ({ handleClose, card }) => {
       let value = parseInt(editPrice);
 
       const baseURL = process.env.NODE_ENV === 'production' ? '/api/cards' : 'http://localhost:5000/api/cards';
-      const response = await axios.post(baseURL, { collection_id, card_id, companygradedby_id, grade_id, isfoil, count, value });
+      const response = await axios.post(baseURL, { user_id, collection_id, card_id, companygradedby_id, grade_id, isfoil, count, value });
 
       console.log(response);
     } catch (error) {
