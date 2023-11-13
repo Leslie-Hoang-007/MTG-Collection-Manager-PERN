@@ -14,9 +14,9 @@ export const Dashboard = () => {
     const [uniqueCards, setUniqueCards] = useState("");
     const [totalCards, setTotalCards] = useState("");
     const [totalValue, setTotalValue] = useState("");
+    const [logs, setLogs] = useState([]);
 
     // messages
-
     const [message, setMessage] = useState("");
 
     useEffect(() => {
@@ -24,6 +24,7 @@ export const Dashboard = () => {
         setId();
         if (user_id) {
             fetchDashboard();
+            fetchLogs();;
         }
     }, [user_id]);
 
@@ -32,9 +33,6 @@ export const Dashboard = () => {
     }
 
     const fetchDashboard = async () => {
-        await setUser_id(cookies.access_token);
-        // console.log(user_id);
-
         try {
             const baseURL = process.env.NODE_ENV === 'production' ? "/api/dashboard" : "http://localhost:5000/api/dashboard";
             const response = await axios.post(baseURL, { user_id });
@@ -48,6 +46,37 @@ export const Dashboard = () => {
             console.error("Error fetching set names:", error);
         }
     };
+
+
+    const fetchLogs = async () => {
+        try {
+            const baseURL = process.env.NODE_ENV === 'production' ? `/api/logs` : "http://localhost:5000/api/logs";
+            const response = await axios.post(baseURL, { user_id });
+            const data = response.data.logs.rows;
+            console.log(data[0].date_time);
+            setLogs(data);
+        } catch (error) {
+            console.error("Error fetching logs:", error);
+        }
+    };
+
+    const renderLogs = () => {
+        const disp_logs = []
+        for (let i = 0; i < 4; i += 1) {
+            const row = (
+                <div className='logdata' id={i == 0 ? "dashboard-list-top" : i == 3 ? "dashboard-list-bottom" : ""}>
+                    <p>{logs[i].date_time}</p><br />
+                    <p>{logs[i].log}</p>
+                </div>);
+            disp_logs.push(row);
+        }
+
+        return (
+            <div>
+                {disp_logs}
+            </div>
+        )
+    }
 
     return (
         <main className="main">
@@ -93,11 +122,8 @@ export const Dashboard = () => {
                                 Recent Activity
                             </h2>
                         </div>
-                        <div >
-                            <Link to={'/cards'} id="dashboard-list-top">Cards</Link>
-                            <Link to={'/collection'}>Collection</Link>
-                            <Link to={'/wishlist'} id="dashboard-list-bottom">Wishlist</Link>
-                        </div>
+               
+                        { logs.length > 0 ? renderLogs(): null}
                     </div>
                 </div>
             </div>

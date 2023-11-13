@@ -854,11 +854,12 @@ app.get('/api/grade', async (req, res) => {
 });
 
 // GET LOG FROM USER
-app.get("/api/logs/", async (req, res) => {
+app.post("/api/logs/", async (req, res) => {
   try {
-    const user_id = req.query.user_id;
-    const logs = await pool.query("SELECT * FROM logs WHERE user_id = $1 ORDER BY date_time DESC", [user_id])
-    
+    const user_id = req.body.user_id; 
+    console.log(user_id);
+    const logs = await pool.query("SELECT * FROM logs WHERE user_id = $1 AND admin = false ORDER BY date_time DESC", [user_id])
+
     res.json({
       logs: logs
     });

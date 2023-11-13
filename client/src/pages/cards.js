@@ -25,6 +25,7 @@ export const Cards = () => {
     const [cookies, _] = useCookies();
 
     const [modalCard, setModalCard] = useState([]);
+    const [gradedUpdate, setGradedUpdate] = useState(null);
 
     const user_id = cookies.access_token;
 
@@ -76,7 +77,7 @@ export const Cards = () => {
     });
 
 
-    // GET CARDS
+    // GET ALL CARDS
     const fetchCards = async () => {
         try {
             const baseURL = process.env.NODE_ENV === 'production' ? `/api/cards?page=${page}&limit=${limit}&search=${search}&set_name=${set_name}&sortBy=${sortBy}` : `http://localhost:5000/api/cards?page=${page}&limit=${limit}&search=${search}&set_name=${set_name}&sortBy=${sortBy}`;
@@ -217,24 +218,25 @@ export const Cards = () => {
                         style={{ top: menuPosition.top + 15, left: menuPosition.left - 18 }}
                     >
                         <ul>
-                            <li onClick={() => fetchSaveCard(id, price)}>Normal</li>
+                            <li onClick={() => {fetchSaveCard(id, price); toggleMenu()}}>Normal</li>
+                            
                             <motion.li
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
+                                // whileHover={{ scale: 1.1 }}
+                                // whileTap={{ scale: 0.9 }}
                                 className="save-button"
-                                onClick={() => (modalOpen ? close() : open(), setModalCard(card))}
+                                onClick={() => {{modalOpen ? close() : open(); setModalCard(card);  setGradedUpdate(true);toggleMenu() }}}
                             >
                                 Add Graded card
                             </motion.li>
                             <motion.li
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
+                                // whileHover={{ scale: 1.1 }}
+                                // whileTap={{ scale: 0.9 }}
                                 className="save-button"
-                                onClick={() => (modalOpen ? close() : open(), setModalCard(card))}
+                                onClick={() => {{modalOpen ? close() : open(); setModalCard(card); setGradedUpdate(false);toggleMenu() }}}
                             >
                                 With more options
                             </motion.li>
-                            <li onClick={() => fetchSaveWishlistCard(id, price)}>Wishlist</li>
+                            <li onClick={() => {fetchSaveWishlistCard(id, price); toggleMenu()}}>Wishlist</li>
                         </ul>
                     </div>
                 )}
@@ -330,7 +332,7 @@ export const Cards = () => {
                     onExitComplete={() => null}
                 >
 
-                    {modalOpen && <Modal modalOpen={modalOpen} handleClose={close} card={modalCard} />}
+                    {modalOpen && <Modal modalOpen={modalOpen} handleClose={close} card={modalCard} graded={gradedUpdate}/>}
                 </AnimatePresence>
                 <div>
                     {renderSearch()}

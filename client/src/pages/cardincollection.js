@@ -60,7 +60,7 @@ export const CardInCollection = () => {
     // CHANGES CARD PRICE IN COLLECTON
     const handleUpdate = async () => {
 
-        console.log(editGrade,editCompany);
+        console.log(editGrade, editCompany);
         // ERROR HANDELING FOR GRADINGCOMPAN AND GRADE
         if (editGrade || editCompany) {
             if (!editGrade) {
@@ -107,6 +107,7 @@ export const CardInCollection = () => {
     const renderCondition = () => {
         let x =
             <div>
+                <h3>Card Condition</h3>
 
                 <select onChange={(e) => handleCompany(e.target.value)}>
                     <option value="">Select a Company</option>
@@ -140,59 +141,124 @@ export const CardInCollection = () => {
 
     // Once the data is loaded, you can display it on the page
     return (
-        <div>
-            <h1>{card.name} - {card.set_name}</h1>
-            <img src={card['image_uris.normal']} alt={card.name} />
-            <p>Product Details<br /> {card.oracle_text}</p>
-            <p>Rarity:<br /> {card.rarity}</p>
-            <p>Card Type:<br /> {card.type_line}</p>
-            <p>Grade: {card.grade_description ? card.grade_description : 'Unknown'}</p>
-            <p>Card Variant: {card.isfoil ? "Foil" : "Normal"}</p>
+        <main className="main">
+            <div className="container">
+                <div className="card-page-inner-container">
+                    <div className="card-image-container">
+
+                        <img src={card['image_uris.normal']} alt={card.name} />
+                    </div>
+                    <div className="card-info">
+                        <div className="card-block">
+                            <h1>{card.name} - {card.set_name}</h1>
+                        </div>
+                        <div className="card-block">
+                            <h2>Set Name: <a to={`/cards/init/${card.set_name}`}>{card.set_name}</a></h2>
+                        </div>
+                        <div className="card-block">
+                            <h2>Flavor</h2>
+                            <p> {card.flavor_text}</p>
+                        </div>
+                        <div className="card-block">
+                            <h2>Rules</h2>
+                            <p> {card.oracle_text}</p>
+                        </div>
+                        <div className="card-block">
+                            <h2>Rarity</h2>
+                            <p>{card.rarity}</p>
+                        </div>
+                        <div className="card-block">
+                            <h2>Card Type</h2>
+                            <p>{card.type_line}</p>
+                        </div>
+                        <div className="card-block">
+                            <h2>Mana Cost</h2>
+                            <p>{card.mana_cost}</p>
+                        </div>
+                    </div>
+                </div>
 
 
 
-            <p>Count: {card.count}</p>
-            <p>Price: {card.value}</p>
 
 
-            <div>
-                <h3>Card Condition</h3>
-                {/* <input
+
+
+                <div className="cc-update-container">
+                    <div className="card-block" id="flex">
+                        <div>
+
+                            <h2>Count</h2>
+                            <p>{card.count}</p>
+                        </div>
+                        <div>
+
+                            <h2>Price</h2>
+                            <p>{card.value}</p>
+                        </div>
+                    </div>
+
+
+                    <div className="card-block" id="flex">
+                        <div>
+                            <h2>Card Variant:</h2>
+                            <p>{card.isfoil ? "Foil" : "Normal"}</p>
+                        </div>
+                        <div >
+                            <h2>Grade</h2>
+                            <p>{card.grade_description ? card.grade_description : 'Unknown'}</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="cc-update-container">
+                    <div className="modal-body">
+                        <h1>Update Card</h1>
+
+
+                        <div className="field" id="center">
+
+                            <label>
+                                Card Variant
+                                {/* <input type="text" value={editFoil} onChange={(e) => setEditFoil(e.target.value)} /> */}
+                                <select onChange={(e) => setEditFoil(e.target.value)}>
+                                    <option value="">Select Foil</option>
+                                    <option value="false">Normal</option>
+                                    <option value="true">Foil</option>
+                                </select>
+                            </label>
+                            <label>
+                                Edit Count:
+                                <input type="text" value={editCount} onChange={(e) => setEditCount(e.target.value)} />
+                            </label>
+                            <label>
+                                Edit Price:
+                                <input type="text" value={editPrice} onChange={(e) => setEditPrice(e.target.value)} />
+                            </label>
+                            <button onClick={handleUpdate} disabled={(editGrade == null || editGrade == "") && (editFoil == null || editFoil == "") && (editCount == null || editCount == "") && (editPrice === null || editPrice == "")}>Save Update</button>
+                            <label>Graded card</label>
+
+                            <Switch
+                                onChange={handleToggle}
+                                checked={cardCondition}
+                                id="xxx"
+                            />
+                        </div>
+
+                        <div>
+                            {/* <input
                     type="checkbox"
                     checked={showComponent}
                     onChange={() => setShowComponent(!showComponent)}
                 /> */}
 
-                <Switch
-                    onChange={handleToggle}
-                    checked={cardCondition}
-                    id="xxx"
-                />
-                <label>Graded card</label>
-                {cardCondition ? renderCondition() : null}
 
+                            {cardCondition ? renderCondition() : null}
+
+                        </div>
+
+                    </div>
+                </div>
             </div>
-
-
-            <label>
-                Card Variant
-                {/* <input type="text" value={editFoil} onChange={(e) => setEditFoil(e.target.value)} /> */}
-                <select onChange={(e) => setEditFoil(e.target.value)}>
-                    <option value="">Select Foil</option>
-                    <option value="false">Normal</option>
-                    <option value="true">Foil</option>
-                </select>
-            </label>
-            <label>
-                Edit Count:
-                <input type="text" value={editCount} onChange={(e) => setEditCount(e.target.value)} />
-            </label>
-            <label>
-                Edit Price:
-                <input type="text" value={editPrice} onChange={(e) => setEditPrice(e.target.value)} />
-            </label>
-
-            <button onClick={handleUpdate} disabled={(editGrade == null || editGrade == "") && (editFoil == null || editFoil == "") && (editCount == null || editCount=="") && (editPrice === null || editPrice=="")}>Save Update</button>
-        </div>
+        </main>
     );
 };

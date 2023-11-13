@@ -17,7 +17,7 @@ export const Card = () => {
             .then(response => {
                 setCard(response.data.card[0]);
                 console.log(response.data.card[0]);
-            
+
             })
             .catch(error => {
                 console.error('Error fetching card data:', error);
@@ -30,14 +30,50 @@ export const Card = () => {
 
     // Once the data is loaded, you can display it on the page
     return (
-        <div>
-            <h1>{card.name} - {card.set_name}</h1>
-            <img src={card["image_uris.normal"]} alt={card.name} />
-            <p>Product Details<br/> {card.oracle_text}</p>
-            <p>Set Name: <Link to={`/cards/init/${card.set_name}`}>{card.set_name}</Link></p>
-            <p>Rarity:<br/> {card.rarity}</p>
-            <p>Card Type:<br/> {card.type_line}</p>
-            <p>Price:<br/> {card["prices.usd"]}</p>
-        </div>
+        <main className="main">
+            <div className="container">
+                <div className="card-page-inner-container">
+                    <div className="card-image-container">
+                        <img src={card["image_uris.normal"]} alt={card.name} />
+
+                    </div>
+                    <div className="card-info">
+                        <div className="card-block">
+                            <h1>{card.name} - {card.set_name}</h1>
+                        </div>
+                        <div className="card-block">
+                            <h2>Set Name: <Link to={`/cards/init/${card.set_name}`}>{card.set_name}</Link></h2>
+                        </div>
+                        <div className="card-block">
+                            <h2>Flavor</h2>
+                            <p> {card.flavor_text}</p>
+                        </div>
+                        <div className="card-block">
+                            <h2>Rules</h2>
+                            <p> {card.oracle_text}</p>
+                        </div>
+                        <div className="card-block">
+                            <h2>Rarity</h2>
+                            <p>{card.rarity}</p>
+                        </div>
+                        <div className="card-block">
+                            <h2>Card Type</h2>
+                            <p>{card.type_line}</p>
+                        </div>
+                        <div className="card-block">
+                            <h2>Price</h2>
+                            <p>{card["prices.usd"]}</p>
+                        </div>
+
+                        <div className="card-block">
+                            <h2>Mana Cost</h2>
+                            <p>{card.mana_cost}</p>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </main>
     );
 }

@@ -29,9 +29,9 @@ const dropIn = {
   },
 };
 
-const Modal = ({ handleClose, card }) => {
+const Modal = ({ handleClose, card, graded }) => {
 
-  
+
   const [cookies, _] = useCookies();
 
   const user_id = cookies.access_token;
@@ -54,6 +54,10 @@ const Modal = ({ handleClose, card }) => {
 
   useEffect(() => {
     fetchGrades();
+    console.log(graded);
+    if (graded){
+      setCardCondition(true);
+    }
   }, []);
 
   // FETCH GRADING COMPANY AND ALL GRADES
@@ -90,7 +94,7 @@ const Modal = ({ handleClose, card }) => {
   // RENDER LIST OF GRADING COMPANY AND GRADES
   const renderCondition = () => {
     let x =
-      <div>
+      <div className="field" id="select-grade">
         <select onChange={(e) => handleCompany(e.target.value)}>
           <option value="">Select a Company</option>
           {company.map((company) => (
@@ -157,39 +161,55 @@ const Modal = ({ handleClose, card }) => {
         animate="visible"
         exit="exit"
       >
-        <h1>Add {card.name} - {card.set_name}</h1>
-        <label>
-          Edit Count:
-          <input type="text" value={editCount} onChange={(e) => setEditCount(e.target.value)} />
-        </label>
-        
-        <label>
-          Card Variant
-          <select onChange={(e) => setEditFoil(e.target.value)}>
-            <option value="">Select Foil</option>
-            <option value="false">Normal</option>
-            <option value="true">Foil</option>
-          </select>
-        </label>
-        <div>
-          <h3>Card Condition</h3>
+        <div className="modal">
+          <div className="modal-header">
 
-          <Switch
-            onChange={handleToggle}
-            checked={cardCondition}
-            id="xxx"
-          />
-          <label>Graded card</label>
-          {cardCondition ? renderCondition() : null}
+            <h1>Add {card.name} - {card.set_name}</h1>
+          </div>
+          <div className="modal-body">
 
+            <div className="field">
+              <label>
+                Edit Count:
+                <input placeholder="1" type="text" value={editCount} onChange={(e) => setEditCount(e.target.value)} />
+              </label>
+              <label>
+                Card Variant
+                <select onChange={(e) => setEditFoil(e.target.value)}>
+                  <option value="">Select Foil</option>
+                  <option value="false">Normal</option>
+                  <option value="true">Foil</option>
+                </select>
+              </label>
+              <label>
+                Edit Price:
+                <input placeholder = {card["prices.usd"]} type="text" value={editPrice} onChange={(e) => setEditPrice(e.target.value)} />
+              </label>
+            </div>
+
+            <div className="field" id = "price">
+      
+            </div>
+
+
+            <div>
+              <h3>Card Condition</h3>
+
+              <Switch
+                onChange={handleToggle}
+                checked={cardCondition}
+                id="xxx"
+              />
+
+              {cardCondition ? renderCondition() : null}
+
+            </div>
+
+            <button onClick={() => { handleAddCard(); handleClose(); }}>Add to Collection</button>
+          </div>
         </div>
-        <label>
-          Edit Price:
-          <input type="text" value={editPrice} onChange={(e) => setEditPrice(e.target.value)} />
-        </label>
-        <button onClick={handleAddCard}>Save Price</button>
 
-        <button onClick={handleClose}>close</button>
+
       </motion.div>
     </Backdrop>
   );
