@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import { useCookies } from "react-cookie";
 import HandleRefreshToken from "../components/refreshToken";
-
+import * as XLSX from "xlsx";
 
 
 export const Dashboard = () => {
@@ -16,6 +16,7 @@ export const Dashboard = () => {
     const [totalValue, setTotalValue] = useState("");
     const [logs, setLogs] = useState([]);
     const [cookies, _] = useCookies([])
+    const [cards, setCards] = useState([]);
 
 
     const signedIn = cookies.signedIn;
@@ -24,11 +25,14 @@ export const Dashboard = () => {
 
     useEffect(() => {
         setMessage("You need to be signed in to your account to view your overall collection progress.")
-        if (signedIn){
+        if (signedIn) {
             fetchDashboard();
             fetchLogs();
         }
-    }, [user_id]);
+        if (cards.length > 0) {
+            handleGenerateReport();
+        }
+    }, [user_id, cards]);
 
 
     const fetchDashboard = async () => {
@@ -60,7 +64,6 @@ export const Dashboard = () => {
             const baseURL = process.env.NODE_ENV === 'production' ? `/api/logs` : "http://localhost:5000/api/logs";
             const response = await axios.post(baseURL, {}, { withCredentials: true });
             const data = response.data.logs.rows;
-            console.log(data[0].date_time);
             setLogs(data);
         } catch (error) {
             if (error.response && error.response.status === 419) {
@@ -95,6 +98,57 @@ export const Dashboard = () => {
             </div>
         )
     }
+
+    const handleGenerateReport = () => {
+        // const headers = ["Count", "Name", "Set Name", "Card #", "Grade", "Foil", "My Price"];
+        const headers = ["Count", "Name", "Set Name", "Card #", "My Price"];
+
+        const wsData = [headers, ...cards.map(card => [
+            card.count,
+            card.name,
+            card.set_name,
+            card.collector_number,
+            //   card.isfoil === true ? 'Wishlist' : (log.wishlist === false ? 'Collection' : 'Other'),
+            card.value
+        ])];
+
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Collection");
+        let fileName;
+        if (cards[0].wishlist) {
+            fileName = "Wishlist.xlsx";
+        } else {
+            fileName = "Collection.xlsx";
+        }
+        XLSX.writeFile(wb, fileName);
+        setCards([]);
+    };
+    const fetchCards = async (data) => {
+        const wishlist = data;
+        try {
+            const baseURL = process.env.NODE_ENV === 'production' ? `/api/collection` : `http://localhost:5000/api/collection`;
+            const response = await axios.post(
+                baseURL, { wishlist }
+                , { withCredentials: true }
+            );
+            setCards(response.data.cards);
+
+
+        } catch (error) {
+            if (error.response && error.response.status === 419) {
+                await HandleRefreshToken();
+                // Retry the original request
+                await fetchCards(wishlist);
+            } else {
+                console.error("Error fetching cards:", error);
+            }
+
+        }
+    }
+
+
+
 
     return (
         <main className="main">
@@ -142,6 +196,13 @@ export const Dashboard = () => {
                         </div>
 
                         {logs.length > 0 ? renderLogs() : null}
+                    </div>
+                    <div className="dashboard-row">
+                        <div className="dashboard-block">
+                            <button onClick={() => fetchCards(false)}>Generate Collection Report</button>
+                            <button onClick={() => fetchCards(true)}>Generate Wishlist Report</button>
+
+                        </div>
                     </div>
                 </div>
             </div>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useCookies } from "react-cookie";
 import axios from "axios";
@@ -33,9 +33,12 @@ export const Navbar = () => {
 
     };
 
+
+
     const logout = () => {
         fetchLogout();
         setCookies("signedIn", "");
+        setCookies("isAdmin", "");
         // setCookies("collection_id", "");
         // setCookies("wishlist_id", "");
         // window.localStorage.clear();
@@ -115,6 +118,17 @@ export const Navbar = () => {
                                 Premium
                             </Link>
                         </li>
+                        
+                        {cookies.isAdmin && (
+                            <li className="navbar-item">
+                                <Link
+                                    to="/admin"
+                                    className={`custom-link ${isActive("/admin") ? "active" : ""}`}
+                                >
+                                    Admin
+                                </Link>
+                            </li>
+                        )}
                     </ul>
 
                     {/* Login/Logout Links */}

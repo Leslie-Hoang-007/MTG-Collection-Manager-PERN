@@ -23,14 +23,14 @@ app.options('*', cors()); // Enable preflight requests for all routes
 const logData = async function (data, req, res, next) {
   try {
 
-    let { user_id, log, card_id, cardincollection_id, admin } = data;
+    let { user_id, log, card_id, cardincollection_id, collection_id,wishlist,admin } = data;
     const date = new Date();
     const options = { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', timeZoneName: 'short' };
     const date_time = new Intl.DateTimeFormat('en-US', options).format(date);
     // Use await to wait for the database query to complete
     const result = await pool.query(
-      "INSERT INTO logs (user_id, log, date_time, card_id, cardincollection_id,admin) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
-      [user_id, log, date_time, card_id, cardincollection_id, admin]
+      "INSERT INTO logs (user_id, log, date_time, card_id, cardincollection_id, collection_id, wishlist,admin) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
+      [user_id, log, date_time, card_id, cardincollection_id,collection_id,wishlist, admin]
     );
     console.log(data);
     // console.log(result.rows[0]); // Log the query result
@@ -99,6 +99,8 @@ const generateRefreshToken = async (user) => {
 // AUTHENTICATE TOKEN AND RETURN USER
 const authenticateToken = (req, res, next) => {
   // console.log(req.cookies);
+  // console.log('hello1');
+  // console.log(req.cookies);
   const token = req.cookies.accessToken;
   if (!token) {
     return res.status(401).json({ message: 'Unauthorized' });
@@ -119,6 +121,20 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
+const isAdmin = (req,res,next) => {
+  // console.log('hello');
+  if (req.user && req.user.admin === true) {
+    return next();
+  } else {
+    return res.status(403).json({ message: 'Forbidden - Not an admin' });
+  }
+};
+
+// API to check if admin
+app.get('/api/isadmin', authenticateToken, isAdmin, (req,res) =>{
+  res.json({ message: 'Welcome to the admin page!' });
+});
+
 // API FOR REFRESHING TOKENS 
 app.post('/api/refreshtoken', async (req, res) => {
   const refreshToken = req.cookies.refreshToken;
@@ -138,6 +154,9 @@ app.post('/api/refreshtoken', async (req, res) => {
     return res.status(403).json({ message: 'Forbidden' });
   }
 });
+
+
+
 
 // POST - LOGIN
 app.post('/api/login', async (req, res) => {
@@ -397,13 +416,15 @@ app.post('/api/collection', authenticateToken, async (req, res) => {
         ORDER BY ca."prices.usd" ASC NULLS FIRST
       `;
     }
-
     // // Add LIMIT AND OFFSET CLAUSE FOR PAGINATION
-    query += " LIMIT " + limit + " OFFSET " + skip;
-
+    if (limit || skip){
+      query += " LIMIT " + limit + " OFFSET " + skip;
+    }
+    
     // RUN QUERY 
     const CardsInCollection = await pool.query(query, [collection_id]);
-
+    
+    // console.log('hello');
 
 
     // loop through and calculate
@@ -473,8 +494,6 @@ app.post('/api/cards', authenticateToken, async (req, res) => {
     
     const wishlist = req.body.wishlist;
 
-    console.log(req.body, "asdf");
-    console.log(wishlist);
     let collection_id;
     if (wishlist){
       collection_id = req.user.wishlist_id;
@@ -499,12 +518,12 @@ app.post('/api/cards', authenticateToken, async (req, res) => {
 
 
     // SEARCH IF CARDINCOLLEC;TION ALREADY EXISTS
-    let searchQueryCardInCollection = "SELECT * FROM cardincollection cc JOIN cards ca ON cc.card_id = ca.id WHERE cc.collection_id = $1 AND cc.card_id = $2"
+    let searchQueryCardInCollection = "SELECT * FROM cardincollection cc JOIN cards ca ON cc.card_id = ca.id JOIN collection col ON cc.collection_id = col.collection_id WHERE cc.collection_id = $1 AND cc.card_id = $2"
     let searchQueryCounter = 2;
     let searchValues = [collection_id, card_id]
 
 
-    console.log(isfoil);
+    // console.log(isfoil);
     if (isfoil == 'true') {
       searchQueryCounter++;
       searchQueryCardInCollection += " AND isfoil = $" + searchQueryCounter;
@@ -541,6 +560,8 @@ app.post('/api/cards', authenticateToken, async (req, res) => {
 
     if (searchCardInCollection.rows.length > 0) {
       const cardincollection_id = searchCardInCollection.rows[0].cardincollection_id;
+      const collection_id = searchCardInCollection.rows[0].collection_id;
+      const wishlist = searchCardInCollection.rows[0].wishlist;
       const updateCount = searchCardInCollection.rows[0].count + count;
       const updateQuery = "UPDATE cardincollection SET count = $1 WHERE cardincollection_id = $2";
 
@@ -552,11 +573,14 @@ app.post('/api/cards', authenticateToken, async (req, res) => {
       logBack += "from " + searchCardInCollection.rows[0].count + " to " + updateCount + ".";
 
       const log = logFront + logBack;
+
       const data = ({
         user_id: user_id,
         log: log,
         card_id: card_id,
         cardincollection_id: cardincollection_id,
+        collection_id: collection_id,
+        wishlist:wishlist,
         admin: false
       });
 
@@ -601,13 +625,14 @@ app.post('/api/cards', authenticateToken, async (req, res) => {
         values.push(count);
       }
 
-      query += ") " + paramValues + ") RETURNING *"
+      query += ") " + paramValues + ") RETURNING *";
 
       const results = await pool.query(query, values);
 
-      // console.log(companygradedby_id, grade_id);
-      console.log(results.rows[0]);
+      // get wishlist status
+      const searchCollection = await pool.query('SELECT * FROM cardincollection cc JOIN collection col ON cc.collection_id = col.collection_id WHERE cc.cardincollection_id = $1',[results.rows[0].cardincollection_id]);
 
+      const wishlist = searchCollection.rows[0].wishlist;
       // LOG
       logFront += "Added " + count + " ";
       logBack += "to collection.";
@@ -617,6 +642,8 @@ app.post('/api/cards', authenticateToken, async (req, res) => {
         log: log,
         card_id: card_id,
         cardincollection_id: results.rows[0].cardincollection_id,
+        collection_id: collection_id,
+        wishlist:wishlist,
         admin: false
       });
 
@@ -640,9 +667,13 @@ app.delete('/api/cards', authenticateToken, async (req, res) => {
     let logBack = "";
     const { user_id } = req.user;
     const { cardincollection_id } = req.body;
-    const searchCard = "SELECT * FROM cardincollection cc JOIN cards c ON cc.card_id = c.id WHERE cc.cardincollection_id = $1";
-    const card = await pool.query(searchCard, [cardincollection_id]);
 
+    // search if exists and quantity is > 1
+    const searchCard = "SELECT * FROM cardincollection cc JOIN cards c ON cc.card_id = c.id JOIN collection col ON cc.collection_id = col.collection_id WHERE cc.cardincollection_id = $1";
+    const card = await pool.query(searchCard, [cardincollection_id]);
+    const wishlist = card.rows[0].wishlist;
+    const card_id = card.rows[0].id;
+    const collection_id = card.rows[0].collection_id;
     logBack += card.rows[0].name + " - " + card.rows[0].set_name + "(Card #" + card.rows[0].collector_number + ") ";
 
     if (card.rows[0].count > 1) {
@@ -652,10 +683,15 @@ app.delete('/api/cards', authenticateToken, async (req, res) => {
 
       logBack += "from " + card.rows[0].count + " to " + newCount + ".";
       const log = logFront + logBack;
+
+
       const data = ({
         user_id: user_id,
         log: log,
+        card_id: card_id,
         cardincollection_id: cardincollection_id,
+        collection_id: collection_id,
+        wishlist:wishlist,
         admin: false
       });
       logData(data, req, res, () => {
@@ -676,7 +712,10 @@ app.delete('/api/cards', authenticateToken, async (req, res) => {
       const data = ({
         user_id: user_id,
         log: log,
-        card_id: card.rows[0].id,
+        card_id: card_id,
+        cardincollection_id: cardincollection_id,
+        collection_id: collection_id,
+        wishlist:wishlist,
         admin: false
       });
 
@@ -863,10 +902,14 @@ app.put('/api/collection', authenticateToken, async (req, res) => {
 
     const log = logFront + logBack;
 
+    console.log('hello', card.rows[0]);
     const data = ({
       user_id: card.rows[0].user_id,
       log: log,
       card_id: card.rows[0].id,
+      cardincollection_id: card.rows[0].cardincollection_id,
+      collection_id: card.rows[0].collection_id,
+      wishlist: card.rows[0].wishlist,
       admin: false
     });
 
@@ -882,45 +925,6 @@ app.put('/api/collection', authenticateToken, async (req, res) => {
 
 
 // ############## USER LOGIN AND REGISTRATION ########################
-
-// // POST - REGISTE USER
-// app.post('/api/register', async (req, res) => {
-//   try {
-
-//     const { username, email, password } = req.body;
-
-//     // search for existing email
-//     const querySearchUser = "SELECT * FROM users WHERE email = $1"
-//     const resultSearch = await pool.query(querySearchUser, [email]);
-
-//     if (resultSearch.rows.length > 0) {
-//       res.json({ status: "EMAIL ADDRESS IN USE" });
-//     } else {
-//       const queryCreateUser = "INSERT INTO users(username,email,password) VALUES ($1,$2,$3) RETURNING *"
-//       const user = await pool.query(queryCreateUser, [username, email, password]);
-//       // console.log(user);
-
-//       // CREATE WISHLIST AND COLLECTION
-//       const collection = await pool.query("INSERT INTO collection (user_id,wishlist) VALUES ($1,$2) RETURNING *", [user.rows[0].user_id, false])
-//       const wishlist = await pool.query("INSERT INTO collection (user_id,wishlist) VALUES ($1,$2) RETURNING *", [user.rows[0].user_id, true])
-
-//       const log = email + " Created an account successfully";
-
-//       const data = ({
-//         user_id: user.rows[0].user_id,
-//         log: log,
-//         admin: true
-//       });
-
-//       logData(data, req, res, () => {
-//         res.json({ status: "ACCOUNT CREATION SUCCESSFUL", user_id: user.rows[0].user_id, collection_id: collection.rows[0].collection_id, wishlist_id: wishlist.rows[0].collection_id });
-//       });
-//     }
-//   } catch (err) {
-//     console.error(err.message);
-//     res.status(500).json({ error: 'Interal Server Error' })
-//   }
-// });
 
 
 // POST - REGISTE USER
@@ -1033,7 +1037,7 @@ app.post("/api/logs/", authenticateToken, async (req, res) => {
   try {
 
     const user_id = req.user.user_id;
-    console.log(user_id);
+    // console.log(user_id);
     const logs = await pool.query("SELECT * FROM logs WHERE user_id = $1 AND admin = false ORDER BY date_time DESC", [user_id])
 
     res.json({
@@ -1047,19 +1051,18 @@ app.post("/api/logs/", authenticateToken, async (req, res) => {
 });
 
 // Get LOG FOR ADMIN
-// app.get('/api/logs', async (req, res) => {
-//   try {
-//     const company = await pool.query("SELECT * FROM companygradedby");
-//     const grades = await pool.query("SELECT * FROM grades");
-//     res.json({
-//       companygradedby: company.rows,
-//       grades: grades.rows
-//     });
-//   } catch (err) {
-//     console.error(err.message);
-//     res.status(500).send('Server Error');
-//   }
-// });
+app.get('/api/alllogs', authenticateToken, isAdmin, async (req, res) => {
+  try {
+    const logs = await pool.query("SELECT * FROM logs ORDER BY date_time DESC");
+    console.log('hello',logs);
+    res.json({
+      logs : logs
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
 
 
 

@@ -83,7 +83,7 @@ export const Collection = () => {
     const renderCardTable = () => {
         const rows = [];
         const numColumns = 6;
-
+        console.log('1',cards[0]);
         for (let i = 0; i < cards.length; i += numColumns) {
             const cardRow = cards.slice(i, i + numColumns);
 

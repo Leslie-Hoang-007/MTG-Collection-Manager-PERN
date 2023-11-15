@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useCookies } from "react-cookie";// for cookies
 import { useNavigate } from "react-router-dom";
+import HandleRefreshToken from "../components/refreshToken";
 
 export const Signin = () => {
     return (
@@ -37,8 +38,9 @@ const Login = () => {
             console.log(result.data.status);
             if (result.data.user_id) {
                 // window.localStorage.setItem("user_id", result.data.user_id);// set local sotrage to userid
-                
+
                 setCookies("signedIn", "true");
+                await isAdmin();
                 // setCookies("collection_id", result.data.collection_id);
                 // setCookies("wishlist_id", result.data.wishlist_id);
                 navigate("/dashboard");// navigate to home page
@@ -50,6 +52,28 @@ const Login = () => {
             console.error(error);
         }
     };
+
+    // Fetch for check if admin 
+
+    const isAdmin = async () => {
+        try {
+            const baseURL =
+                process.env.NODE_ENV === "production"
+                    ? "/api/isadmin"
+                    : "http://localhost:5000/api/isadmin";
+            await axios.get(baseURL, { withCredentials: true });
+            setCookies("isAdmin", "true");
+        } catch (error) {
+            // If the request returns a 419, attempt to refresh the token and retry
+            if (error.response && error.response.status === 419) {
+                await HandleRefreshToken();
+                // Retry the original request
+                await isAdmin();
+            } else {
+                console.error('Error not admin:', error);
+            }
+        }
+    }
 
     let message;
 
@@ -87,8 +111,8 @@ const Login = () => {
                         </div>
                         <div className="form-group">
 
-                            <button type="submit" id ="signin">Sign in</button>
-                            <button onClick={redirectSignup} id = "register">Register</button>
+                            <button type="submit" id="signin">Sign in</button>
+                            <button onClick={redirectSignup} id="register">Register</button>
                         </div>
                     </form>
                 </div>
