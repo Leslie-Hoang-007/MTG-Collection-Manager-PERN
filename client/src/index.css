@@ -125,7 +125,8 @@ code {
   width: 12rem;
   height: 1.5rem;
   font-size: 1rem;
-  margin-left: 0.5rem;
+  margin: 0.5rem;
+  
   width: auto;
 }
 
@@ -136,13 +137,15 @@ code {
   font-size: 1rem;
   padding-bottom: auto;
   padding-top: auto;
-  margin-left: 0.5rem;
+  margin: 0.5rem;
 
 }
 
 .field {
   display: flex;
 }
+
+
 
 #select-grade {
   display: block;

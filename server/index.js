@@ -2,6 +2,7 @@ const express = require("express");
 const app = express(); // takes express library and run it
 const cors = require("cors");
 const pool = require("./db");
+const bcrypt = require('bcrypt');
 require("dotenv").config();
 
 // MIDDLEWARE
@@ -681,6 +682,46 @@ app.put('/api/collection', async (req, res) => {
 
 // ############## USER LOGIN AND REGISTRATION ########################
 
+// // POST - REGISTE USER
+// app.post('/api/register', async (req, res) => {
+//   try {
+
+//     const { username, email, password } = req.body;
+
+//     // search for existing email
+//     const querySearchUser = "SELECT * FROM users WHERE email = $1"
+//     const resultSearch = await pool.query(querySearchUser, [email]);
+
+//     if (resultSearch.rows.length > 0) {
+//       res.json({ status: "EMAIL ADDRESS IN USE" });
+//     } else {
+//       const queryCreateUser = "INSERT INTO users(username,email,password) VALUES ($1,$2,$3) RETURNING *"
+//       const user = await pool.query(queryCreateUser, [username, email, password]);
+//       // console.log(user);
+
+//       // CREATE WISHLIST AND COLLECTION
+//       const collection = await pool.query("INSERT INTO collection (user_id,wishlist) VALUES ($1,$2) RETURNING *", [user.rows[0].user_id, false])
+//       const wishlist = await pool.query("INSERT INTO collection (user_id,wishlist) VALUES ($1,$2) RETURNING *", [user.rows[0].user_id, true])
+
+//       const log = email + " Created an account successfully";
+    
+//       const data = ({
+//         user_id: user.rows[0].user_id,
+//         log: log,
+//         admin: true
+//       });
+
+//       logData(data, req, res, () => {
+//         res.json({ status: "ACCOUNT CREATION SUCCESSFUL", user_id: user.rows[0].user_id, collection_id: collection.rows[0].collection_id, wishlist_id: wishlist.rows[0].collection_id });
+//       });
+//     }
+//   } catch (err) {
+//     console.error(err.message);
+//     res.status(500).json({ error: 'Interal Server Error' })
+//   }
+// });
+
+
 // POST - REGISTE USER
 app.post('/api/register', async (req, res) => {
   try {
@@ -694,8 +735,16 @@ app.post('/api/register', async (req, res) => {
     if (resultSearch.rows.length > 0) {
       res.json({ status: "EMAIL ADDRESS IN USE" });
     } else {
-      const queryCreateUser = "INSERT INTO users(username,email,password) VALUES ($1,$2,$3) RETURNING *"
-      const user = await pool.query(queryCreateUser, [username, email, password]);
+
+      // generate salt
+      const saltRounds = 6;
+      const salt = await bcrypt.genSalt(saltRounds);
+
+      // hashed password
+      const hashPassword = await bcrypt.hash(password,salt);
+
+      const queryCreateUser = "INSERT INTO users(username,email,password,salt) VALUES ($1,$2,$3,$4) RETURNING *"
+      const user = await pool.query(queryCreateUser, [username, email, hashPassword,salt]);
       // console.log(user);
 
       // CREATE WISHLIST AND COLLECTION
@@ -720,6 +769,7 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
+
 // POST - LOGIN
 app.post('/api/login', async (req, res) => {
   try {
@@ -732,7 +782,10 @@ app.post('/api/login', async (req, res) => {
     const resultSearch = await pool.query(querySearchUser, [email]);
     if (resultSearch.rows.length > 0) {
       const storedPassword = resultSearch.rows[0].password;
-      if (storedPassword == password) {
+      var salt = resultSearch.rows[0].salt;
+      const hashedInputPass = await bcrypt.hash(password,salt);
+      console.log(hashedInputPass);
+      if (storedPassword === hashedInputPass) {
         const collection_id = await pool.query("SELECT collection_id FROM collection WHERE wishlist = false AND user_id = $1", [resultSearch.rows[0].user_id]);
         const wishlist_id = await pool.query("SELECT collection_id FROM collection WHERE wishlist = true AND user_id = $1", [resultSearch.rows[0].user_id]);
 
@@ -853,7 +906,7 @@ app.get('/api/grade', async (req, res) => {
   }
 });
 
-// GET LOG FROM USER
+// GET LOG FOR USER
 app.post("/api/logs/", async (req, res) => {
   try {
     const user_id = req.body.user_id; 

@@ -62,7 +62,12 @@ export const Dashboard = () => {
 
     const renderLogs = () => {
         const disp_logs = []
-        for (let i = 0; i < 4; i += 1) {
+        let x;
+        if (logs.length<4){
+            x= logs.length;
+        }else {x=4};
+
+        for (let i = 0; i < x; i += 1) {
             const row = (
                 <div className='logdata' id={i == 0 ? "dashboard-list-top" : i == 3 ? "dashboard-list-bottom" : ""}>
                     <p>{logs[i].date_time}</p><br />
