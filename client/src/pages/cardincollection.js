@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from 'react-router-dom';
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import { useCookies } from "react-cookie";
 import Switch from 'react-switch';
+import HandleRefreshToken from "../components/refreshToken";
 
 export const CardInCollection = () => {
     const { cardincollection_id } = useParams();
     const [card, setCard] = useState(null);
-    const [cookies, _] = useCookies();
     const [company, setCompany] = useState([]);
     const [grades, setGrades] = useState([]);
     const [filteredGrades, setFilteredGrades] = useState([]);
@@ -32,13 +30,20 @@ export const CardInCollection = () => {
         try {
             // console.log(cardincollection_id);
             const baseURL = process.env.NODE_ENV === 'production' ? `/api/collection?cardincollection_id=${cardincollection_id}` : `http://localhost:5000/api/collection?cardincollection_id=${cardincollection_id}`;
-            const response = await axios.get(baseURL);
+            const response = await axios.get(baseURL, { withCredentials: true });
             // const data = response.data;
             await setCard(response.data.card);
             // console.log(response.data.card);
             // console.log(card.grade_id);
         } catch (error) {
-            console.error("Error fetching set names:", error);
+
+            if (error.response && error.response.status === 419) {
+                await HandleRefreshToken();
+                // Retry the original request
+                await fetchCard();
+            } else {
+                console.error("Error fetching cards:", error);
+            }
         }
     };
 
@@ -82,13 +87,21 @@ export const CardInCollection = () => {
             let value = parseInt(editPrice);
             const baseURL = process.env.NODE_ENV === 'production' ? '/api/collection' : 'http://localhost:5000/api/collection';
 
-            const response = await axios.put(baseURL, { cardincollection_id, companygradedby_id, grade_id, isfoil, count, value });
+            const response = await axios.put(baseURL, { cardincollection_id, companygradedby_id, grade_id, isfoil, count, value }, { withCredentials: true });
 
             console.log(response);
             // REFRESH CARD STATS
             fetchCard();
         } catch (error) {
-            console.log("SERVER ERROR", error)
+
+            if (error.response && error.response.status === 419) {
+                await HandleRefreshToken();
+                // Retry the original request
+                await handleUpdate();
+            } else {
+                console.log("Error updating card:", error)
+            }
+
         }
 
     };
@@ -221,7 +234,7 @@ export const CardInCollection = () => {
                                 Card Variant
                                 {/* <input type="text" value={editFoil} onChange={(e) => setEditFoil(e.target.value)} /> */}
                                 <select onChange={(e) => setEditFoil(e.target.value)}>
-                                    <option value="">Select Foil</option>
+                                    <option value="">Select Variant</option>
                                     <option value="false">Normal</option>
                                     <option value="true">Foil</option>
                                 </select>
@@ -234,7 +247,14 @@ export const CardInCollection = () => {
                                 Edit Price:
                                 <input type="text" value={editPrice} onChange={(e) => setEditPrice(e.target.value)} />
                             </label>
-                            <button onClick={handleUpdate} disabled={(editGrade == null || editGrade == "") && (editFoil == null || editFoil == "") && (editCount == null || editCount == "") && (editPrice === null || editPrice == "")}>Save Update</button>
+                            <button onClick={handleUpdate}
+                                disabled={(editGrade == null || editGrade == "" || editGrade == card.grade_id) && (editFoil == null || editFoil == "" || card.isfoil == (editFoil == 'true')) && (editCount == null || editCount == "" || editCount == 0 || editCount == card.count) && (editPrice === null || editPrice == "" || editPrice == card.value)}
+                                id={
+                                    ((editGrade == null || editGrade == "" || editGrade == card.grade_id) && (editFoil == null || editFoil == "" || card.isfoil == (editFoil == 'true')) && (editCount == null || editCount == "" || editCount == 0 || editCount == card.count) && (editPrice === null || editPrice == "" || editPrice == card.value))
+                                        ? 'disabledUpdateButton'
+                                        : ""
+                                }
+                            >Save Update</button>
                             <label>Graded card</label>
 
                             <Switch

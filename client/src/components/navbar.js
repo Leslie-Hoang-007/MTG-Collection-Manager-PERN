@@ -2,32 +2,44 @@ import React from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useCookies } from "react-cookie";
 import axios from "axios";
+import HandleRefreshToken from "./refreshToken";
 
 export const Navbar = () => {
     // cookies
-    const [cookies, setCookies] = useCookies(["access_token"]);
+    const [cookies, setCookies] = useCookies();
     const navigate = useNavigate();
     const location = useLocation();
 
     // Function to handle logout
     const fetchLogout = async () => {
-        const user_id = cookies.access_token;
-        const baseURL =
-            process.env.NODE_ENV === "production"
-                ? "/api/logout"
-                : "http://localhost:5000/api/logout";
-        const response = await axios.put(baseURL, { user_id });
-        // console.log(response);
-        navigate("/");
+        try {
+            const baseURL =
+                process.env.NODE_ENV === "production"
+                    ? "/api/logout"
+                    : "http://localhost:5000/api/logout";
+            const response = await axios.put(baseURL, {}, { withCredentials: true });
+            console.log(response);
+            navigate("/");
+        } catch (error) {
+            // If the request returns a 419, attempt to refresh the token and retry
+            if (error.response && error.response.status === 419) {
+                await HandleRefreshToken();
+                // Retry the original request
+                await fetchLogout();
+            } else {
+                console.error('Error accessing admin page:', error);
+            }
+        }
 
     };
 
     const logout = () => {
-        setCookies("access_token", "");
-        setCookies("collection_id", "");
-        setCookies("wishlist_id", "");
-        window.localStorage.clear();
         fetchLogout();
+        setCookies("signedIn", "");
+        // setCookies("collection_id", "");
+        // setCookies("wishlist_id", "");
+        // window.localStorage.clear();
+        navigate("/");// navigate to home page
     };
 
     // Function to check if a link is active
@@ -75,7 +87,7 @@ export const Navbar = () => {
                                 Cards
                             </Link>
                         </li>
-                        {cookies.access_token && (
+                        {cookies.signedIn && (
                             <>
                                 <li className="navbar-item">
                                     <Link
@@ -108,7 +120,7 @@ export const Navbar = () => {
                     {/* Login/Logout Links */}
                     <ul className="nav-login">
                         <li className="navbar-item">
-                            {!cookies.access_token && (
+                            {!cookies.signedIn && (
                                 <Link
                                     to="/account/register"
                                     className={`custom-link ${isActive("/account/register") ? "active" : ""}`}
@@ -118,7 +130,7 @@ export const Navbar = () => {
                             )}
                         </li>
                         <li className="navbar-item">
-                            {!cookies.access_token && (
+                            {!cookies.signedIn && (
                                 <Link
                                     to="/account/signin"
                                     className={`custom-link ${isActive("/account/signin") ? "active" : ""}`}
@@ -128,7 +140,7 @@ export const Navbar = () => {
                             )}
                         </li>
                         <li className="navbar-item">
-                            {cookies.access_token && (
+                            {cookies.signedIn && (
                                 <Link onClick={logout} className="custom-link">
                                     Sign out
                                 </Link>

@@ -3,11 +3,11 @@ import { motion } from "framer-motion";
 import { Backdrop } from "./backdrop";
 import React, { useEffect, useState } from "react";
 
-import { useCookies } from "react-cookie";
 import Switch from 'react-switch';
 
 
 import axios from "axios";
+import HandleRefreshToken from "./refreshToken";
 const dropIn = {
   hidden: {
     y: "-100vh",
@@ -32,11 +32,8 @@ const dropIn = {
 const Modal = ({ handleClose, card, graded }) => {
 
 
-  const [cookies, _] = useCookies();
 
-  const user_id = cookies.access_token;
   const card_id = card.id;
-  const collection_id = cookies.collection_id;
 
 
   const [company, setCompany] = useState([]);
@@ -54,8 +51,7 @@ const Modal = ({ handleClose, card, graded }) => {
 
   useEffect(() => {
     fetchGrades();
-    console.log(graded);
-    if (graded){
+    if (graded) {
       setCardCondition(true);
     }
   }, []);
@@ -142,11 +138,18 @@ const Modal = ({ handleClose, card, graded }) => {
       let value = parseInt(editPrice);
 
       const baseURL = process.env.NODE_ENV === 'production' ? '/api/cards' : 'http://localhost:5000/api/cards';
-      const response = await axios.post(baseURL, { user_id, collection_id, card_id, companygradedby_id, grade_id, isfoil, count, value });
+      const response = await axios.post(baseURL, { card_id, companygradedby_id, grade_id, isfoil, count, value }
+        , { withCredentials: true });
 
       console.log(response);
     } catch (error) {
-      console.log("SERVER ERROR", error)
+      if (error.response && error.response.status === 419) {
+        await HandleRefreshToken();
+        // Retry the original request
+        await handleAddCard();
+      } else {
+        console.error("Error fetching cards:", error);
+      }
     }
 
   };
@@ -183,12 +186,12 @@ const Modal = ({ handleClose, card, graded }) => {
               </label>
               <label>
                 Edit Price:
-                <input placeholder = {card["prices.usd"]} type="text" value={editPrice} onChange={(e) => setEditPrice(e.target.value)} />
+                <input placeholder={card["prices.usd"]} type="text" value={editPrice} onChange={(e) => setEditPrice(e.target.value)} />
               </label>
             </div>
 
-            <div className="field" id = "price">
-      
+            <div className="field" id="price">
+
             </div>
 
 

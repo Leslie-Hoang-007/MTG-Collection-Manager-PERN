@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import { useCookies } from "react-cookie";
 import DropDownMenu from "../components/dropDownMenu";
 
 import { AnimatePresence, motion } from "framer-motion";
 import Modal from "../components/modal";
 import RenderPageNumbers from "../components/renderPageNumbers";
+import HandleRefreshToken from "../components/refreshToken";
 
 
 export const Cards = () => {
@@ -22,12 +22,10 @@ export const Cards = () => {
     const [sortBy, setSortBy] = useState("name-asc");
     const [totalPages, setTotalPages] = useState(1);
     const [sets, setSets] = useState([]);
-    const [cookies, _] = useCookies();
 
     const [modalCard, setModalCard] = useState([]);
     const [gradedUpdate, setGradedUpdate] = useState(null);
 
-    const user_id = cookies.access_token;
 
     useEffect(() => {
 
@@ -99,23 +97,36 @@ export const Cards = () => {
         try {
             // console.log(user_id);
             const baseURL = process.env.NODE_ENV === 'production' ? "/api/cards" : "http://localhost:5000/api/cards";
-            const collection_id = cookies.collection_id;
-            const response = await axios.post(baseURL, { user_id, collection_id, card_id, value });
+            const response = await axios.post(baseURL, { card_id, value }
+                , { withCredentials: true });
             console.log(response);
-        } catch (err) {
-            console.log(err);
-        }
+        } catch (error) {
+            if (error.response && error.response.status === 419) {
+                await HandleRefreshToken();
+                // Retry the original request
+                await fetchSaveCard();
+            } else {
+                console.error("Error adding card to collection:", error);
+            }        }
     };
 
     // ADD TO WISHLIST
     const fetchSaveWishlistCard = async (card_id, value) => {
         try {
             const baseURL = process.env.NODE_ENV === 'production' ? "/api/cards" : "http://localhost:5000/api/cards";
-            const collection_id = cookies.wishlist_id;
-            const response = await axios.post(baseURL, { user_id, collection_id, card_id, value });
+            const wishlist = true;
+            const response = await axios.post(baseURL, { card_id, value, wishlist }
+                , { withCredentials: true }
+                );
             console.log(response);
-        } catch (err) {
-            console.log(err);
+        } catch (error) {
+            if (error.response && error.response.status === 419) {
+                await HandleRefreshToken();
+                // Retry the original request
+                await fetchSaveWishlistCard();
+            } else {
+                console.error("Error adding card to wishlist:", error);
+            }     
         }
     };
 

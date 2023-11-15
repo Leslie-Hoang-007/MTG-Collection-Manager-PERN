@@ -4,12 +4,12 @@ import { useEffect } from "react";
 
 export const Home = () => {
     // cookies
-    const [cookies, setCookies] = useCookies(["access_token"])
+    const [cookies, _] = useCookies([])
 
     const navigate = useNavigate();
-    const user_id = cookies.access_token;
+    const signedIn = cookies.signedIn;
     useEffect(() => {
-        if (user_id) {
+        if (signedIn) {
             navigate("/dashboard");
         }
     }, [])

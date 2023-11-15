@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import { useCookies } from "react-cookie";
 import RenderPageNumbers from "../components/renderPageNumbers";
+import HandleRefreshToken from "../components/refreshToken";
 
 export const Collection = () => {
 
@@ -17,13 +17,10 @@ export const Collection = () => {
     const [sortBy, setSortBy] = useState("name-asc");
     const [totalPages, setTotalPages] = useState(1);
     const [sets, setSets] = useState([]);
-    const [cookies, _] = useCookies();
-    const user_id = cookies.access_token;
 
     useEffect(() => {
         fetchSets();
         fetchCards();
-        console.log(cookies.collection_id);
     }, [page, search, set_name, limit, sortBy]);
 
     const fetchSets = async () => {
@@ -41,16 +38,23 @@ export const Collection = () => {
     const fetchCards = async () => {
         try {
             const baseURL = process.env.NODE_ENV === 'production' ? `/api/collection` : `http://localhost:5000/api/collection`;
-            const collection_id = cookies.collection_id;
             const response = await axios.post(
-                baseURL, { collection_id, page, limit, search, set_name, sortBy }
+                baseURL, { page, limit, search, set_name, sortBy }
+                , { withCredentials: true }
             );
 
             const data = response.data;
             setCards(data.cards);
             setTotalPages(Math.ceil(data.totalCards / limit));
         } catch (error) {
-            console.error("Error fetching cards:", error);
+            if (error.response && error.response.status === 419) {
+                await HandleRefreshToken();
+                // Retry the original request
+                await fetchCards();
+            } else {
+                console.error("Error fetching cards:", error);
+            }
+        
         }
     }
 
@@ -59,11 +63,20 @@ export const Collection = () => {
         try {
             // console.log(cardincollection_id);
             const baseURL = process.env.NODE_ENV === 'production' ? `/api/cards` : `http://localhost:5000/api/cards`;
-            const response = await axios.delete(baseURL, { data: { user_id, cardincollection_id } });
+            const response = await axios.delete(baseURL, { 
+                data: { cardincollection_id },
+                withCredentials: true 
+            });
             console.log(response);
             fetchCards();
-        } catch (err) {
-            console.log(err);
+        } catch (error) {
+            if (error.response && error.response.status === 419) {
+                await HandleRefreshToken();
+                // Retry the original request
+                await fetchDeleteCard();
+            } else {
+                console.error("Error deleting cards:", error);
+            }
         }
     };
 

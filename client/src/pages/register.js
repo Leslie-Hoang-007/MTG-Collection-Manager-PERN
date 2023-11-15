@@ -1,12 +1,10 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { useCookies } from "react-cookie";// for cookies
 import { useNavigate } from "react-router-dom";
 
 export const Register = () => {
     // create cookie 
     // NOT SET YET 
-    const [_, setCookies] = useCookies();
 
     // Variables
     const [username, setUsername] = useState("");
@@ -48,12 +46,12 @@ export const Register = () => {
                 return;
             }
             if (result.data.status == "ACCOUNT CREATION SUCCESSFUL") {
-                setCookies("access_token", result.data.user_id);
-                setCookies("collection_id", result.data.collection_id);
-                setCookies("wishlist_id", result.data.wishlist_id);
+                // setCookies("access_token", result.data.user_id);
+                // setCookies("collection_id", result.data.collection_id);
+                // setCookies("wishlist_id", result.data.wishlist_id);
 
                 // window.localStorage.setItem("user_id", result.data.user_id);// set local sotrage to userid
-                navigate("/dashboard");// navigate to home page
+                navigate("/account/signin");// navigate to home page
             }
         } catch (error) {
             console.error(error);

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { useCookies } from "react-cookie";
+import HandleRefreshToken from "../components/refreshToken";
 
 
 
@@ -9,33 +10,31 @@ export const Dashboard = () => {
 
 
     // variables
-    const [cookies, _] = useCookies();
     const [user_id, setUser_id] = useState("");
     const [uniqueCards, setUniqueCards] = useState("");
     const [totalCards, setTotalCards] = useState("");
     const [totalValue, setTotalValue] = useState("");
     const [logs, setLogs] = useState([]);
+    const [cookies, _] = useCookies([])
 
+
+    const signedIn = cookies.signedIn;
     // messages
     const [message, setMessage] = useState("");
 
     useEffect(() => {
         setMessage("You need to be signed in to your account to view your overall collection progress.")
-        setId();
-        if (user_id) {
+        if (signedIn){
             fetchDashboard();
-            fetchLogs();;
+            fetchLogs();
         }
     }, [user_id]);
 
-    const setId = () => {
-        setUser_id(cookies.access_token);
-    }
 
     const fetchDashboard = async () => {
         try {
             const baseURL = process.env.NODE_ENV === 'production' ? "/api/dashboard" : "http://localhost:5000/api/dashboard";
-            const response = await axios.post(baseURL, { user_id });
+            const response = await axios.post(baseURL, {}, { withCredentials: true });
             const data = response.data;
             setMessage("");
             setUniqueCards(data.uniqueCards);
@@ -43,7 +42,15 @@ export const Dashboard = () => {
             setTotalValue(data.totalValue);
             // console.log(cookies);
         } catch (error) {
-            console.error("Error fetching set names:", error);
+
+            // If the request returns a 419, attempt to refresh the token and retry
+            if (error.response && error.response.status === 419) {
+                await HandleRefreshToken();
+                // Retry the original request
+                await fetchDashboard();
+            } else {
+                console.error('Error accessing dashboard data:', error);
+            }
         }
     };
 
@@ -51,21 +58,27 @@ export const Dashboard = () => {
     const fetchLogs = async () => {
         try {
             const baseURL = process.env.NODE_ENV === 'production' ? `/api/logs` : "http://localhost:5000/api/logs";
-            const response = await axios.post(baseURL, { user_id });
+            const response = await axios.post(baseURL, {}, { withCredentials: true });
             const data = response.data.logs.rows;
             console.log(data[0].date_time);
             setLogs(data);
         } catch (error) {
-            console.error("Error fetching logs:", error);
+            if (error.response && error.response.status === 419) {
+                await HandleRefreshToken();
+                // Retry the original request
+                await fetchLogs();
+            } else {
+                console.error("Error accessing logs:", error);
+            }
         }
     };
 
     const renderLogs = () => {
         const disp_logs = []
         let x;
-        if (logs.length<4){
-            x= logs.length;
-        }else {x=4};
+        if (logs.length < 4) {
+            x = logs.length;
+        } else { x = 4 };
 
         for (let i = 0; i < x; i += 1) {
             const row = (
@@ -127,8 +140,8 @@ export const Dashboard = () => {
                                 Recent Activity
                             </h2>
                         </div>
-               
-                        { logs.length > 0 ? renderLogs(): null}
+
+                        {logs.length > 0 ? renderLogs() : null}
                     </div>
                 </div>
             </div>

@@ -182,3 +182,8 @@ background-color: #c94a14;
 #center button{
   margin: auto 0;
 }
+
+#disabledUpdateButton{
+  background-color: #cfcfcf;
+  border-color: #cfcfcf;
+}

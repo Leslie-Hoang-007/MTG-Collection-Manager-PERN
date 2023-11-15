@@ -1,13 +1,9 @@
 import { Link, useNavigate, Redirect } from "react-router-dom";
-import { useCookies } from "react-cookie";
 import { useEffect } from "react";
 
 export const Premium = () => {
-    // cookies
-    const [cookies, setCookies] = useCookies(["access_token"])
 
     const navigate = useNavigate();
-    const user_id = cookies.access_token;
     useEffect(() => {
         // if (user_id) {
         //     navigate("/dashboard");

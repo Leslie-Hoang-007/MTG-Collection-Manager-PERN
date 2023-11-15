@@ -33,13 +33,14 @@ const Login = () => {
             const result = await axios.post(baseURL, {// fetch api
                 email,
                 password,
-            });
+            }, { withCredentials: true });
             console.log(result.data.status);
             if (result.data.user_id) {
                 // window.localStorage.setItem("user_id", result.data.user_id);// set local sotrage to userid
-                setCookies("access_token", result.data.user_id);
-                setCookies("collection_id", result.data.collection_id);
-                setCookies("wishlist_id", result.data.wishlist_id);
+                
+                setCookies("signedIn", "true");
+                // setCookies("collection_id", result.data.collection_id);
+                // setCookies("wishlist_id", result.data.wishlist_id);
                 navigate("/dashboard");// navigate to home page
             } else {
                 // window.location.reload();
