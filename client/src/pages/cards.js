@@ -107,7 +107,8 @@ export const Cards = () => {
                 await fetchSaveCard();
             } else {
                 console.error("Error adding card to collection:", error);
-            }        }
+            }
+        }
     };
 
     // ADD TO WISHLIST
@@ -117,7 +118,7 @@ export const Cards = () => {
             const wishlist = true;
             const response = await axios.post(baseURL, { card_id, value, wishlist }
                 , { withCredentials: true }
-                );
+            );
             console.log(response);
         } catch (error) {
             if (error.response && error.response.status === 419) {
@@ -126,28 +127,22 @@ export const Cards = () => {
                 await fetchSaveWishlistCard();
             } else {
                 console.error("Error adding card to wishlist:", error);
-            }     
+            }
         }
     };
 
     const renderCardTable = () => {
-        const rows = [];
-        const numColumns = 6;
-
-        for (let i = 0; i < cards.length; i += numColumns) {
-            const cardRow = cards.slice(i, i + numColumns);
-
-            const cardCells = cardRow.map((card) => (
-                <td
-                    key={card.id}
+        const cardCells = cards.map((card) => (
+            <div
+                key={card.id}
                 // onMouseEnter={() => handleCardHover(card)}
                 // onMouseLeave={handleCardLeave}
+                className="card-cell"
+            >
 
-                >
-
-                    <Link to={`/cards/${card.id}`}>
-                        <div>
-                            {/* {hoveredCard === card && (
+                <Link to={`/cards/${card.id}`}>
+                    <div className="card-cell-image">
+                        {/* {hoveredCard === card && (
                                 <div className="card-name-overlay">
                                     <p>
                                         {card.name}
@@ -159,43 +154,40 @@ export const Cards = () => {
                                 </div>
                             )} */}
 
-                            {card["image_uris.normal"] ? (
-                                <img src={card["image_uris.normal"]} alt={card.name} />
-                            ) : card.multiverse_ids && card.multiverse_ids.length > 0 ? (
-                                <img
-                                    src={`https://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=${card["multiverse_ids.0"]}&type=card`}
-                                    alt={card.name}
-                                />
-                            ) : (
-                                <div className="image-not-available">Image not available</div>
+                        {card["image_uris.normal"] ? (
+                            <img src={card["image_uris.normal"]} alt={card.name} onError={(e) => (e.target.src ='https://i.imgur.com/LdOBU1I.jpeg')}
+                            />
+                        ) : card.multiverse_ids && card.multiverse_ids.length > 0 ? (
+                            <img
+                                src={`https://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=${card["multiverse_ids.0"]}&type=card`}
+                                alt={card.name}
+                                onError={(e) => (e.target.src ='https://i.imgur.com/LdOBU1I.jpeg')}
+                            />
+                        ) : (
+                            <img src="https://i.imgur.com/LdOBU1I.jpeg" alt={`${card.name} - Image not available`}/>
+                        )}
 
-                            )}
-
-                        </div>
-                    </Link>
-                    <div>
-                        <p>
-                            {card["prices.usd"] ? parseFloat(card["prices.usd"]).toFixed(2) : 'XX.XX'}
-                        </p>
-                        {/* <button
+                    </div>
+                </Link>
+                <div className="card-cell-control">
+                    <p>
+                        {card["prices.usd"] ? parseFloat(card["prices.usd"]).toFixed(2) : 'XX.XX'}
+                    </p>
+                    {/* <button
                             onClick={() => fetchSaveCard(card.id, card["prices.usd"])}
                         >+
                         </button> */}
-                        <DropdownMenu id={card.id} price={card["prices.usd"]} card={card} />
-                    </div>
-                </td>
-            ));
+                    <DropdownMenu id={card.id} price={card["prices.usd"]} card={card} />
+                </div>
+            </div>
+        ));
 
-            rows.push(<tr key={i}>{cardCells}</tr>);
-        }
 
         return (
 
-            <table >
-                <tbody >
-                    {rows}
-                </tbody>
-            </table>
+            <div className="card-image-grid" id ="card-image-grid-width">
+                {cardCells}
+            </div>
 
         );
     };
@@ -229,13 +221,13 @@ export const Cards = () => {
                         style={{ top: menuPosition.top + 15, left: menuPosition.left - 18 }}
                     >
                         <ul>
-                            <li onClick={() => {fetchSaveCard(id, price); toggleMenu()}}>Normal</li>
-                            
+                            <li onClick={() => { fetchSaveCard(id, price); toggleMenu() }}>Normal</li>
+
                             <motion.li
                                 // whileHover={{ scale: 1.1 }}
                                 // whileTap={{ scale: 0.9 }}
                                 className="save-button"
-                                onClick={() => {{modalOpen ? close() : open(); setModalCard(card);  setGradedUpdate(true);toggleMenu() }}}
+                                onClick={() => { { modalOpen ? close() : open(); setModalCard(card); setGradedUpdate(true); toggleMenu() } }}
                             >
                                 Add Graded card
                             </motion.li>
@@ -243,11 +235,11 @@ export const Cards = () => {
                                 // whileHover={{ scale: 1.1 }}
                                 // whileTap={{ scale: 0.9 }}
                                 className="save-button"
-                                onClick={() => {{modalOpen ? close() : open(); setModalCard(card); setGradedUpdate(false);toggleMenu() }}}
+                                onClick={() => { { modalOpen ? close() : open(); setModalCard(card); setGradedUpdate(false); toggleMenu() } }}
                             >
                                 With more options
                             </motion.li>
-                            <li onClick={() => {fetchSaveWishlistCard(id, price); toggleMenu()}}>Wishlist</li>
+                            <li onClick={() => { fetchSaveWishlistCard(id, price); toggleMenu() }}>Wishlist</li>
                         </ul>
                     </div>
                 )}
@@ -343,14 +335,14 @@ export const Cards = () => {
                     onExitComplete={() => null}
                 >
 
-                    {modalOpen && <Modal modalOpen={modalOpen} handleClose={close} card={modalCard} graded={gradedUpdate}/>}
+                    {modalOpen && <Modal modalOpen={modalOpen} handleClose={close} card={modalCard} graded={gradedUpdate} />}
                 </AnimatePresence>
                 <div>
                     {renderSearch()}
                 </div>
-                <div>
-                    {cards ? renderCardTable() : null}
-                </div>
+
+                {cards ? renderCardTable() : null}
+
                 <RenderPageNumbers
                     page={page}
                     totalPages={totalPages}

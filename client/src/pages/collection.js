@@ -54,7 +54,7 @@ export const Collection = () => {
             } else {
                 console.error("Error fetching cards:", error);
             }
-        
+
         }
     }
 
@@ -63,9 +63,9 @@ export const Collection = () => {
         try {
             // console.log(cardincollection_id);
             const baseURL = process.env.NODE_ENV === 'production' ? `/api/cards` : `http://localhost:5000/api/cards`;
-            const response = await axios.delete(baseURL, { 
+            const response = await axios.delete(baseURL, {
                 data: { cardincollection_id },
-                withCredentials: true 
+                withCredentials: true
             });
             console.log(response);
             fetchCards();
@@ -81,23 +81,19 @@ export const Collection = () => {
     };
 
     const renderCardTable = () => {
-        const rows = [];
-        const numColumns = 6;
-        console.log('1',cards[0]);
-        for (let i = 0; i < cards.length; i += numColumns) {
-            const cardRow = cards.slice(i, i + numColumns);
 
-            const cardCells = cardRow.map((card) => (
-                <td
-                    key={card.id}
+        const cardCells = cards.map((card) => (
+            <div
+
+                key={card.id}
                 // onMouseEnter={() => handleCardHover(card)}
                 // onMouseLeave={handleCardLeave}
+                className="card-cell"
+            >
 
-                >
-
-                    <Link to={`/collection/${card.cardincollection_id}`}>
-                        <div className="card">
-                            {/* {hoveredCard === card && (
+                <Link to={`/collection/${card.cardincollection_id}`}>
+                    <div className="card-cell-image">
+                        {/* {hoveredCard === card && (
                                 <div className="card-name-overlay">
                                     <p>
                                         {card.name}
@@ -109,42 +105,38 @@ export const Collection = () => {
                                 </div>
                             )} */}
 
-                            {card["image_uris.normal"] ? (
-                                <img src={card["image_uris.normal"]} alt={card.name} />
-                            ) : card.multiverse_ids && card.multiverse_ids.length > 0 ? (
-                                <img
-                                    src={`https://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=${card["multiverse_ids.0"]}&type=card`}
-                                    alt={card.name}
-                                />
-                            ) : (
-                                <div className="image-not-available">Image not available</div>
+                        {card["image_uris.normal"] ? (
+                            <img src={card["image_uris.normal"]} alt={card.name} onError={(e) => (e.target.src = 'https://i.imgur.com/LdOBU1I.jpeg')}
+                            />
+                        ) : card.multiverse_ids && card.multiverse_ids.length > 0 ? (
+                            <img
+                                src={`https://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=${card["multiverse_ids.0"]}&type=card`}
+                                alt={card.name}
+                                onError={(e) => (e.target.src = 'https://i.imgur.com/LdOBU1I.jpeg')}
+                            />
+                        ) : (
+                            <img src="https://i.imgur.com/LdOBU1I.jpeg" alt={`${card.name} - Image not available`} />
+                        )}
 
-                            )}
-
-                        </div>
-                    </Link>
-                    <div>
-                        <p>
-                            {card.value ? parseFloat(card.value).toFixed(2) : 'XX.XX'}
-                        </p>
-                        <p>{card.count}</p>
-                        <button
-                            onClick={() => fetchDeleteCard(card.cardincollection_id)}
-                        >-
-                        </button>
                     </div>
-                </td>
-            ));
-
-            rows.push(<tr key={i}>{cardCells}</tr>);
-        }
+                </Link>
+                <div className="card-cell-control">
+                    <p>
+                        {card.value ? parseFloat(card.value).toFixed(2) : 'XX.XX'}
+                    </p>
+                    <p>{card.count}</p>
+                    <button
+                        onClick={() => fetchDeleteCard(card.cardincollection_id)}
+                    >-
+                    </button>
+                </div>
+            </div>
+        ));
 
         return (
-            <table>
-                <tbody>
-                    {rows}
-                </tbody>
-            </table>
+            <div className="card-image-grid" id="card-image-grid-width">
+                {cardCells}
+            </div>
         );
     };
 
@@ -222,9 +214,9 @@ export const Collection = () => {
                 <div>
                     {renderSearch()}
                 </div>
-                <div>
-                    {cards ? renderCardTable() : null}
-                </div>
+
+                {cards ? renderCardTable() : null}
+
                 <RenderPageNumbers
                     page={page}
                     totalPages={totalPages}

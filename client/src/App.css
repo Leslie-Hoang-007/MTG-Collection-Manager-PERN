@@ -124,7 +124,7 @@ body {
   padding: 1.5rem 0 2.5rem;
 }
 
-table {
+/* table {
   padding: 1rem 0 2.5rem;
   border-top: 1px solid #e3e3e3;
 }
@@ -137,8 +137,58 @@ td img {
 
 td {
   padding: 0.25rem;
+} */
+
+.card-image-grid {
+  display: grid;
+  gap: 1rem 0.75rem;
+  margin: 1.75rem 0rem;
+  /* width: 100%; */
 }
 
+@media (min-width: 1160px) {
+  #card-image-grid-width {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 960px) and (max-width: 1159.98px) {
+  #card-image-grid-width {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 760px) and (max-width: 959.98px) {
+  #card-image-grid-width {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 560px) and (max-width: 759.98px){
+  #card-image-grid-width {
+      grid-template-columns: repeat(3,minmax(0,1fr));
+  }
+}
+
+@media (max-width: 559.98px) {
+  #card-image-grid-width {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+
+
+.card-cell {
+  width: 100%;
+}
+
+.card-cell-image img {
+  max-width: 320px;
+  aspect-ratio: 320 / 440;
+  width: 100%;
+  /* border: 1px solid red; */
+  border-radius: .5rem;
+}
 
 /* pagination */
 
@@ -604,11 +654,12 @@ select:hover {
   grid-template-columns: repeat(2, 1fr);
 }
 
-#flex h2{
+#flex h2 {
   font-weight: 500;
   line-height: 1.25;
   display: block;
 }
-#flex div:hover{
+
+#flex div:hover {
   background-color: #e8f0fe;
 }

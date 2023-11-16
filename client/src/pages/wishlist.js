@@ -80,23 +80,19 @@ export const Wishlist = () => {
     };
 
     const renderCardTable = () => {
-        const rows = [];
-        const numColumns = 6;
 
-        for (let i = 0; i < cards.length; i += numColumns) {
-            const cardRow = cards.slice(i, i + numColumns);
+        const cardCells = cards.map((card) => (
+            <div
 
-            const cardCells = cardRow.map((card) => (
-                <td
-                    key={card.id}
+                key={card.id}
                 // onMouseEnter={() => handleCardHover(card)}
                 // onMouseLeave={handleCardLeave}
+                className="card-cell"
+            >
 
-                >
-
-                    <Link to={`/collection/${card.cardincollection_id}`}>
-                        <div className="card">
-                            {/* {hoveredCard === card && (
+                <Link to={`/collection/${card.cardincollection_id}`}>
+                <div className="card-cell-image">
+                        {/* {hoveredCard === card && (
                                 <div className="card-name-overlay">
                                     <p>
                                         {card.name}
@@ -108,128 +104,125 @@ export const Wishlist = () => {
                                 </div>
                             )} */}
 
-                            {card["image_uris.normal"] ? (
-                                <img src={card["image_uris.normal"]} alt={card.name} />
-                            ) : card.multiverse_ids && card.multiverse_ids.length > 0 ? (
-                                <img
-                                    src={`https://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=${card["multiverse_ids.0"]}&type=card`}
-                                    alt={card.name}
-                                />
-                            ) : (
-                                <div className="image-not-available">Image not available</div>
+                        {card["image_uris.normal"] ? (
+                            <img src={card["image_uris.normal"]} alt={card.name} onError={(e) => (e.target.src = 'https://i.imgur.com/LdOBU1I.jpeg')}
+                            />
+                        ) : card.multiverse_ids && card.multiverse_ids.length > 0 ? (
+                            <img
+                                src={`https://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=${card["multiverse_ids.0"]}&type=card`}
+                                alt={card.name}
+                                onError={(e) => (e.target.src = 'https://i.imgur.com/LdOBU1I.jpeg')}
+                            />
+                        ) : (
+                            <img src="https://i.imgur.com/LdOBU1I.jpeg" alt={`${card.name} - Image not available`} />
+                        )}
 
-                            )}
-
-                        </div>
-                    </Link>
-                    <div>
-                        <p>
-                            {card["prices.usd"] ? parseFloat(card["prices.usd"]).toFixed(2) : 'XX.XX'}
-                        </p>
-                        <p>{card.count}</p>
-                        <button
-                            onClick={() => fetchDeleteCard(card.cardincollection_id)}
-                        >-
-                        </button>
                     </div>
-                </td>
-            ));
-
-            rows.push(<tr key={i}>{cardCells}</tr>);
-        }
-
-        return (
-            <table>
-                <tbody>
-                    {rows}
-                </tbody>
-            </table>
-        );
-    };
-
-
-    const handlePageChange = (page) => {
-        setPage(page);
-    };
-
-    const handleSetChange = (name) => {
-        setSet_name(name);
-        setPage(1);
-    };
-    const renderSearch = () => {
-        return (
-            <div className="search-container">
-
-
-                <div className="search-top">
-
-                    <div className="search-name">
-                        <img className="magnifyglass" src="https://upload.wikimedia.org/wikipedia/commons/5/55/Magnifying_glass_icon.svg"></img>
-                        <input
-                            placeholder="Search cards..."
-                            type="text"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
-                    </div>
-                    <div className="search-set">
-                        <label>Set Name:</label>
-                        <select
-                            value={set_name}
-                            onChange={(e) => handleSetChange(e.target.value)}
-                        >
-                            <option value="">All Sets</option>
-                            {sets.map((setName) => (
-                                <option key={setName.id} value={setName.name}>{setName.name}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                </div>
-
-                <div className="search-display-option">
-                    <div>
-                        <label>Page Limit:</label>
-                        <select
-                            value={limit}
-                            onChange={(e) => setLimit(parseInt(e.target.value))}
-                        >
-                            <option value={30}>30</option>
-                            <option value={60}>60</option>
-                            <option value={120}>120</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label>Sort By:</label>
-                        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-                            <option value="name-asc">Name (A-Z)</option>
-                            <option value="name-desc">Name (Z-A)</option>
-                            <option value="price-high">Price (High to Low)</option>
-                            <option value="price-low">Price (Low to High)</option>
-                        </select>
-                    </div>
+                </Link>
+                <div className="card-cell-control">
+                    <p>
+                        {card["prices.usd"] ? parseFloat(card["prices.usd"]).toFixed(2) : 'XX.XX'}
+                    </p>
+                    <p>{card.count}</p>
+                    <button
+                        onClick={() => fetchDeleteCard(card.cardincollection_id)}
+                    >-
+                    </button>
                 </div>
             </div>
+        ));
 
-        );
-    }
+
     return (
-        <main className="main">
-            <div className="container">
-                <div>
-                    {renderSearch()}
-                </div>
-                <div>
-                    {cards ? renderCardTable() : null}
-                </div>
-                <RenderPageNumbers
-                    page={page}
-                    totalPages={totalPages}
-                    handlePageChange={handlePageChange}
-                />
-            </div>
-        </main>
+        <div className="card-image-grid" id="card-image-grid-width">
+            {cardCells}
+        </div>
+    );
+};
 
-    )
+
+const handlePageChange = (page) => {
+    setPage(page);
+};
+
+const handleSetChange = (name) => {
+    setSet_name(name);
+    setPage(1);
+};
+const renderSearch = () => {
+    return (
+        <div className="search-container">
+
+
+            <div className="search-top">
+
+                <div className="search-name">
+                    <img className="magnifyglass" src="https://upload.wikimedia.org/wikipedia/commons/5/55/Magnifying_glass_icon.svg"></img>
+                    <input
+                        placeholder="Search cards..."
+                        type="text"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                    />
+                </div>
+                <div className="search-set">
+                    <label>Set Name:</label>
+                    <select
+                        value={set_name}
+                        onChange={(e) => handleSetChange(e.target.value)}
+                    >
+                        <option value="">All Sets</option>
+                        {sets.map((setName) => (
+                            <option key={setName.id} value={setName.name}>{setName.name}</option>
+                        ))}
+                    </select>
+                </div>
+
+            </div>
+
+            <div className="search-display-option">
+                <div>
+                    <label>Page Limit:</label>
+                    <select
+                        value={limit}
+                        onChange={(e) => setLimit(parseInt(e.target.value))}
+                    >
+                        <option value={30}>30</option>
+                        <option value={60}>60</option>
+                        <option value={120}>120</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Sort By:</label>
+                    <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                        <option value="name-asc">Name (A-Z)</option>
+                        <option value="name-desc">Name (Z-A)</option>
+                        <option value="price-high">Price (High to Low)</option>
+                        <option value="price-low">Price (Low to High)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+    );
+}
+return (
+    <main className="main">
+        <div className="container">
+            <div>
+                {renderSearch()}
+            </div>
+
+            {cards ? renderCardTable() : null}
+
+            <RenderPageNumbers
+                page={page}
+                totalPages={totalPages}
+                handlePageChange={handlePageChange}
+            />
+        </div>
+    </main>
+
+)
 };
