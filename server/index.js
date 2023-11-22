@@ -5,6 +5,8 @@ const pool = require("./db");
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
+const stripe = require('stripe')('sk_test_51OFJVzD3rnaRGeMUPdxzB6MNVh3sJ0rdUbmkikjzDJaua1lIxsdqXmbEw7IfO9T7UZObigh6wwgsKF9t5XZIdbKj00H1ABdRqM');
+
 require("dotenv").config();
 
 // MIDDLEWARE
@@ -19,6 +21,36 @@ app.use(cors({
 }));
 
 app.options('*', cors()); // Enable preflight requests for all routes
+
+// payments
+
+app.post('/api/sub', async (req, res) => {
+  const { email, payment_method } = req.body;
+  
+  // create customer
+  const customer = await stripe.customers.create({
+    payment_method: payment_method,
+    email: email,
+    invoice_settings: {
+      default_payment_method: payment_method,
+    },
+  });
+  
+
+  // add uctomer to subscription
+  const subscription = await stripe.subscriptions.create({
+    customer: customer.id,
+    items: [{ price: 'price_1OFLJTD3rnaRGeMUHSTEJOWe' }],
+    expand: ['latest_invoice.payment_intent']
+  });
+  
+  const status = subscription['latest_invoice']['payment_intent']['status']
+  const client_secret = subscription['latest_invoice']['payment_intent']['client_secret']
+  console.log('hello');
+
+  res.json({ 'client_secret': client_secret, 'status': status });
+})
+
 
 // LOGS 
 
