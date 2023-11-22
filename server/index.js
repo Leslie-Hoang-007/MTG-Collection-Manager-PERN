@@ -13,8 +13,9 @@ app.use(express.json());// get data from client side from req.body objext
 app.use(cookieParser());
 app.use(cors({
   // origin: 'http://localhost:3000', // Adjust this to the origin of your frontend application
-  origin: '*', // Adjust this to the origin of your frontend application
-  credentials: true,
+  origin: 'https://www.mtgcollectionmanager.com', // Adjust this to the origin of your frontend application
+  // origin: `*`, // Adjust this to the origin of your frontend application
+  credentials: true
 }));
 
 app.options('*', cors()); // Enable preflight requests for all routes
