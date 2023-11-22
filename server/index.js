@@ -24,14 +24,14 @@ app.options('*', cors()); // Enable preflight requests for all routes
 const logData = async function (data, req, res, next) {
   try {
 
-    let { user_id, log, card_id, cardincollection_id, collection_id,wishlist,admin } = data;
+    let { user_id, log, card_id, cardincollection_id, collection_id, wishlist, admin } = data;
     const date = new Date();
     const options = { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', timeZoneName: 'short' };
     const date_time = new Intl.DateTimeFormat('en-US', options).format(date);
     // Use await to wait for the database query to complete
     const result = await pool.query(
       "INSERT INTO logs (user_id, log, date_time, card_id, cardincollection_id, collection_id, wishlist,admin) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
-      [user_id, log, date_time, card_id, cardincollection_id,collection_id,wishlist, admin]
+      [user_id, log, date_time, card_id, cardincollection_id, collection_id, wishlist, admin]
     );
     console.log(data);
     // console.log(result.rows[0]); // Log the query result
@@ -60,8 +60,8 @@ const generateAccessToken = async (user) => {
         username: user.username,
         email: user.email,
         admin: user.admin,
-        collection_id: collection_id.rows[0]?.collection_id || null,
-        wishlist_id: wishlist_id.rows[0]?.collection_id || null,
+        collection_id: collection_id.rows[0] ? collection_id.rows[0].collection_id || null : null,
+        wishlist_id: wishlist_id.rows[0] ? wishlist_id.rows[0].wishlist_id || null : null,
       },
       process.env.SECRETKEY,
       { expiresIn: '1h' }
@@ -122,7 +122,7 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-const isAdmin = (req,res,next) => {
+const isAdmin = (req, res, next) => {
   // console.log('hello');
   if (req.user && req.user.admin === true) {
     return next();
@@ -132,7 +132,7 @@ const isAdmin = (req,res,next) => {
 };
 
 // API to check if admin
-app.get('/api/isadmin', authenticateToken, isAdmin, (req,res) =>{
+app.get('/api/isadmin', authenticateToken, isAdmin, (req, res) => {
   res.json({ message: 'Welcome to the admin page!' });
 });
 
@@ -214,7 +214,7 @@ app.post('/api/login', async (req, res) => {
 // PUT - LOGOUT
 app.put('/api/logout', authenticateToken, async (req, res) => {
   try {
-    
+
     const user = req.user;
     const user_id = user.user_id;
 
@@ -418,13 +418,13 @@ app.post('/api/collection', authenticateToken, async (req, res) => {
       `;
     }
     // // Add LIMIT AND OFFSET CLAUSE FOR PAGINATION
-    if (limit || skip){
+    if (limit || skip) {
       query += " LIMIT " + limit + " OFFSET " + skip;
     }
-    
+
     // RUN QUERY 
     const CardsInCollection = await pool.query(query, [collection_id]);
-    
+
     // console.log('hello');
 
 
@@ -483,7 +483,7 @@ app.get("/api/collection", authenticateToken, async (req, res) => {
 // POST - Add CardInCollection
 app.post('/api/cards', authenticateToken, async (req, res) => {
   try {
-    
+
     const user_id = req.user.user_id;
     const card_id = req.body.card_id;
     const companygradedby_id = req.body.companygradedby_id;
@@ -492,13 +492,13 @@ app.post('/api/cards', authenticateToken, async (req, res) => {
     let count = req.body.count;
     const value = req.body.value;
 
-    
+
     const wishlist = req.body.wishlist;
 
     let collection_id;
-    if (wishlist){
+    if (wishlist) {
       collection_id = req.user.wishlist_id;
-    }else{
+    } else {
       collection_id = req.user.collection_id;
     }
 
@@ -581,7 +581,7 @@ app.post('/api/cards', authenticateToken, async (req, res) => {
         card_id: card_id,
         cardincollection_id: cardincollection_id,
         collection_id: collection_id,
-        wishlist:wishlist,
+        wishlist: wishlist,
         admin: false
       });
 
@@ -631,7 +631,7 @@ app.post('/api/cards', authenticateToken, async (req, res) => {
       const results = await pool.query(query, values);
 
       // get wishlist status
-      const searchCollection = await pool.query('SELECT * FROM cardincollection cc JOIN collection col ON cc.collection_id = col.collection_id WHERE cc.cardincollection_id = $1',[results.rows[0].cardincollection_id]);
+      const searchCollection = await pool.query('SELECT * FROM cardincollection cc JOIN collection col ON cc.collection_id = col.collection_id WHERE cc.cardincollection_id = $1', [results.rows[0].cardincollection_id]);
 
       const wishlist = searchCollection.rows[0].wishlist;
       // LOG
@@ -644,7 +644,7 @@ app.post('/api/cards', authenticateToken, async (req, res) => {
         card_id: card_id,
         cardincollection_id: results.rows[0].cardincollection_id,
         collection_id: collection_id,
-        wishlist:wishlist,
+        wishlist: wishlist,
         admin: false
       });
 
@@ -692,7 +692,7 @@ app.delete('/api/cards', authenticateToken, async (req, res) => {
         card_id: card_id,
         cardincollection_id: cardincollection_id,
         collection_id: collection_id,
-        wishlist:wishlist,
+        wishlist: wishlist,
         admin: false
       });
       logData(data, req, res, () => {
@@ -716,7 +716,7 @@ app.delete('/api/cards', authenticateToken, async (req, res) => {
         card_id: card_id,
         cardincollection_id: cardincollection_id,
         collection_id: collection_id,
-        wishlist:wishlist,
+        wishlist: wishlist,
         admin: false
       });
 
@@ -1057,7 +1057,7 @@ app.get('/api/alllogs', authenticateToken, isAdmin, async (req, res) => {
     const logs = await pool.query("SELECT * FROM logs ORDER BY date_time DESC");
     // console.log('hello',logs);
     res.json({
-      logs : logs
+      logs: logs
     });
   } catch (err) {
     console.error(err.message);
