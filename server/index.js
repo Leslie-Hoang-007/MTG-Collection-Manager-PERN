@@ -12,7 +12,8 @@ require("dotenv").config();
 app.use(express.json());// get data from client side from req.body objext
 app.use(cookieParser());
 app.use(cors({
-  origin: 'http://localhost:3000', // Adjust this to the origin of your frontend application
+  // origin: 'http://localhost:3000', // Adjust this to the origin of your frontend application
+  origin: 'http://www.mtgcollectionmanager.com', // Adjust this to the origin of your frontend application
   credentials: true,
 }));
 
@@ -1054,7 +1055,7 @@ app.post("/api/logs/", authenticateToken, async (req, res) => {
 app.get('/api/alllogs', authenticateToken, isAdmin, async (req, res) => {
   try {
     const logs = await pool.query("SELECT * FROM logs ORDER BY date_time DESC");
-    console.log('hello',logs);
+    // console.log('hello',logs);
     res.json({
       logs : logs
     });
