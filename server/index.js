@@ -60,8 +60,8 @@ const generateAccessToken = async (user) => {
         username: user.username,
         email: user.email,
         admin: user.admin,
-        collection_id: collection_id.rows[0] ? collection_id.rows[0].collection_id || null : null,
-        wishlist_id: wishlist_id.rows[0] ? wishlist_id.rows[0].wishlist_id || null : null,
+        collection_id: collection_id.rows[0].collection_id,
+        wishlist_id: wishlist_id.rows[0].collection_id,
       },
       process.env.SECRETKEY,
       { expiresIn: '1h' }
@@ -85,8 +85,8 @@ const generateRefreshToken = async (user) => {
         username: user.username,
         email: user.email,
         admin: user.admin,
-        collection_id: collection_id.rows[0]?.collection_id || null,
-        wishlist_id: wishlist_id.rows[0]?.collection_id || null,
+        collection_id: collection_id.rows[0].collection_id,
+        wishlist_id: wishlist_id.rows[0].collection_id,
       },
       process.env.REFRESHSECRETKEY,
       { expiresIn: '180d' }
