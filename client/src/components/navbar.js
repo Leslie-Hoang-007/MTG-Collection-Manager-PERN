@@ -27,7 +27,11 @@ export const Navbar = () => {
                 // Retry the original request
                 await fetchLogout();
             } else {
-                console.error('Error accessing admin page:', error);
+                console.error('Error:', error);
+                setCookies("signedIn", "",);
+                setCookies("isAdmin", "");
+                navigate("/");// navigate to home page
+
             }
         }
 
@@ -39,9 +43,6 @@ export const Navbar = () => {
         fetchLogout();
         setCookies("signedIn", "");
         setCookies("isAdmin", "");
-        // setCookies("collection_id", "");
-        // setCookies("wishlist_id", "");
-        // window.localStorage.clear();
         navigate("/");// navigate to home page
     };
 
@@ -119,7 +120,7 @@ export const Navbar = () => {
                             </Link>
                         </li>
                         
-                        {cookies.isAdmin && (
+                        {cookies.isAdmin === 'admin' && (
                             <li className="navbar-item">
                                 <Link
                                     to="/admin"

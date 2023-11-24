@@ -6,15 +6,18 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const stripe = require('stripe')('sk_test_51OFJVzD3rnaRGeMUPdxzB6MNVh3sJ0rdUbmkikjzDJaua1lIxsdqXmbEw7IfO9T7UZObigh6wwgsKF9t5XZIdbKj00H1ABdRqM');
+const YOUR_DOMAIN = 'http://localhost:3000';
+// const YOUR_DOMAIN = 'https://www.mtgcollectionmanager.com';
 
 require("dotenv").config();
 
 // MIDDLEWARE
-
+app.use(express.static('public'));
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());// get data from client side from req.body objext
 app.use(cookieParser());
 app.use(cors({
-  origin: 'http://localhost:3000', // Adjust this to the origin of your frontend application
+  origin: YOUR_DOMAIN, // Adjust this to the origin of your frontend application
   // origin: 'https://www.mtgcollectionmanager.com', // Adjust this to the origin of your frontend application
   // origin: `*`, // Adjust this to the origin of your frontend application
   credentials: true
@@ -22,38 +25,8 @@ app.use(cors({
 
 app.options('*', cors()); // Enable preflight requests for all routes
 
-// payments
-
-app.post('/api/sub', async (req, res) => {
-  const { email, payment_method } = req.body;
-  
-  // create customer
-  const customer = await stripe.customers.create({
-    payment_method: payment_method,
-    email: email,
-    invoice_settings: {
-      default_payment_method: payment_method,
-    },
-  });
-  
-
-  // add uctomer to subscription
-  const subscription = await stripe.subscriptions.create({
-    customer: customer.id,
-    items: [{ price: 'price_1OFLJTD3rnaRGeMUHSTEJOWe' }],
-    expand: ['latest_invoice.payment_intent']
-  });
-  
-  const status = subscription['latest_invoice']['payment_intent']['status']
-  const client_secret = subscription['latest_invoice']['payment_intent']['client_secret']
-  console.log('hello');
-
-  res.json({ 'client_secret': client_secret, 'status': status });
-})
-
 
 // LOGS 
-
 const logData = async function (data, req, res, next) {
   try {
 
@@ -92,7 +65,7 @@ const generateAccessToken = async (user) => {
         user_id: user.user_id,
         username: user.username,
         email: user.email,
-        admin: user.admin,
+        role: user.role,
         collection_id: collection_id.rows[0].collection_id,
         wishlist_id: wishlist_id.rows[0].collection_id,
       },
@@ -117,7 +90,7 @@ const generateRefreshToken = async (user) => {
         user_id: user.user_id,
         username: user.username,
         email: user.email,
-        admin: user.admin,
+        role: user.role,
         collection_id: collection_id.rows[0].collection_id,
         wishlist_id: wishlist_id.rows[0].collection_id,
       },
@@ -132,9 +105,6 @@ const generateRefreshToken = async (user) => {
 
 // AUTHENTICATE TOKEN AND RETURN USER
 const authenticateToken = (req, res, next) => {
-  // console.log(req.cookies);
-  // console.log('hello1');
-  // console.log(req.cookies);
   const token = req.cookies.accessToken;
   if (!token) {
     return res.status(401).json({ message: 'Unauthorized' });
@@ -155,18 +125,72 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-const isAdmin = (req, res, next) => {
-  // console.log('hello');
-  if (req.user && req.user.admin === true) {
+
+
+// update subscription 
+const updateSub = async (req, res, next) => {
+  try {
+    const user = req.user;
+    const results = await pool.query("SELECT sub_id FROM subscriptionlist WHERE user_id = $1", [user.user_id]);
+
+    if (results.rows.length === 0) {
+      return next();
+    }
+
+    let log = "";
+    const sub_id = results.rows[0].sub_id;
+    const subscription = await stripe.subscriptions.retrieve(sub_id);
+    const cancel_at = subscription.cancel_at;
+    if (cancel_at == null && user.role == 'unsubscriber') {
+      await pool.query("UPDATE users SET role = 'subscriber' WHERE email = $1;", [user.email]);
+      log = user.email + " Resubscribed."
+    } else if (cancel_at){
+      const currentUnixTime = Math.floor(new Date().getTime() / 1000);
+      if (currentUnixTime >= cancel_at){
+        await pool.query("UPDATE users SET role = 'member' WHERE email = $1;", [user.email]);
+        log = user.email + " Unsubscribed."
+      }
+    }
+
+    if (log != ""){
+      const data = ({
+        user_id: req.user.user_id,
+        log: log,
+        admin: true
+      });
+  
+      logData(data, req, res, () => {
+        return next();
+      });
+    };
+  
+
     return next();
-  } else {
-    return res.status(403).json({ message: 'Forbidden - Not an admin' });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: 'Interal Server Error' })
   }
 };
 
+const isAdmin = (req, res, next) => {
+  if (req.user && req.user.role === 'admin') {
+    return next();
+  } else if (req.user && req.user.role === 'subscriber') {
+    return res.json({ message: 'subscriber' });
+  } else if (req.user && req.user.role === 'unsubscriber') {
+    return res.json({ message: 'unsubscriber' });
+  } else if (req.user && req.user.role === 'member') {
+    return res.json({ message: 'member' });
+  }
+  else {
+    return res.status(500).json({ error: 'Interal Server Error' });
+  }
+};
+
+
 // API to check if admin
-app.get('/api/isadmin', authenticateToken, isAdmin, (req, res) => {
-  res.json({ message: 'Welcome to the admin page!' });
+app.get('/api/isadmin', authenticateToken, updateSub, isAdmin, (req, res) => {
+  res.json({ message: 'admin' });
 });
 
 // API FOR REFRESHING TOKENS 
@@ -189,6 +213,154 @@ app.post('/api/refreshtoken', async (req, res) => {
   }
 });
 
+
+// payments
+
+app.post('/api/create-checkout-session', async (req, res) => {
+  console.log(req.body.lookup_key);
+  const prices = await stripe.prices.list({
+
+  });
+  console.log(prices.data);
+  console.log('asdf');
+
+  //get customer list #################
+  // const customers = await stripe.customers.list();
+  // console.log(customers);
+
+  //##################################
+
+  const session = await stripe.checkout.sessions.create({
+    billing_address_collection: 'auto',
+    line_items: [
+      {
+        price: prices.data[0].id,
+        // For metered billing, do not pass quantity
+        quantity: 1,
+
+      },
+    ],
+    mode: 'subscription',
+    success_url: `${YOUR_DOMAIN}/premium/?success=true&session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${YOUR_DOMAIN}/premium/?canceled=true`,
+  });
+
+  console.log('hello');
+  // res.redirect(303, session.url);
+  const url = session.url;
+  res.json({
+    url: url
+  });
+});
+
+app.post('/api/create-portal-session', authenticateToken, async (req, res) => {
+  const user = req.user;
+
+  const results = await pool.query("SELECT cus_id FROM subscriptionlist WHERE user_id = $1", [user.user_id]);
+
+  const returnUrl = YOUR_DOMAIN;
+  const cus_id = results.rows[0].cus_id;
+  const portalSession = await stripe.billingPortal.sessions.create({
+    customer: cus_id,
+    return_url: returnUrl,
+  });
+
+  const url = portalSession.url;
+  res.json({
+    url: url
+  });
+
+});
+
+
+// create subscription 
+app.post('/api/create-subscription', authenticateToken, async (req, res) => {
+  try {
+    const { session_id } = req.body;
+    console.log(session_id);
+    const checkoutSession = await stripe.checkout.sessions.retrieve(session_id);
+
+    // console.log('asdf', checkoutSession);
+    console.log(checkoutSession.customer);
+    console.log(checkoutSession.subscription);
+
+    const subscription = await stripe.subscriptions.retrieve(
+      checkoutSession.subscription
+    );
+
+    const result = await pool.query("INSERT INTO subscriptionlist(user_id,cus_id,sub_id,created) VALUES ($1,$2,$3,$4)", [req.user.user_id, checkoutSession.customer, checkoutSession.subscription, subscription.created])
+
+    await pool.query("UPDATE users SET role = 'subscriber' WHERE email = $1;", [req.user.email]);
+    const log = req.user.email + " Subscribed successfully, Updated role, and made a subscriptionlist";
+    const data = ({
+      user_id: req.user.user_id,
+      log: log,
+      admin: true
+    });
+
+    logData(data, req, res, () => {
+      res.json({ status: "SUBSCRIPTION CREATION SUCCESSFUL" });
+    });
+
+
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: 'Interal Server Error' })
+  }
+});
+
+
+
+
+// ############## USER LOGIN AND REGISTRATION ########################
+
+
+// POST - REGISTE USER
+app.post('/api/register', async (req, res) => {
+  try {
+
+    const { username, email, password } = req.body;
+
+    // search for existing email
+    const querySearchUser = "SELECT * FROM users WHERE email = $1"
+    const resultSearch = await pool.query(querySearchUser, [email]);
+
+    if (resultSearch.rows.length > 0) {
+      res.json({ status: "EMAIL ADDRESS IN USE" });
+    } else {
+
+      // generate salt
+      const saltRounds = 6;
+      const salt = await bcrypt.genSalt(saltRounds);
+
+      // hashed password
+      const hashPassword = await bcrypt.hash(password, salt);
+
+      const queryCreateUser = "INSERT INTO users(username,email,password,salt) VALUES ($1,$2,$3,$4) RETURNING *"
+      const user = await pool.query(queryCreateUser, [username, email, hashPassword, salt]);
+      // console.log(user);
+
+      // CREATE WISHLIST AND COLLECTION
+      const collection = await pool.query("INSERT INTO collection (user_id,wishlist) VALUES ($1,$2) RETURNING *", [user.rows[0].user_id, false])
+      const wishlist = await pool.query("INSERT INTO collection (user_id,wishlist) VALUES ($1,$2) RETURNING *", [user.rows[0].user_id, true])
+
+      const log = email + " Created an account successfully";
+
+      const data = ({
+        user_id: user.rows[0].user_id,
+        log: log,
+        admin: true
+      });
+
+      logData(data, req, res, () => {
+        res.json({ status: "ACCOUNT CREATION SUCCESSFUL", user_id: user.rows[0].user_id, collection_id: collection.rows[0].collection_id, wishlist_id: wishlist.rows[0].collection_id });
+      });
+    }
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: 'Interal Server Error' })
+  }
+});
 
 
 
@@ -524,8 +696,6 @@ app.post('/api/cards', authenticateToken, async (req, res) => {
     const isfoil = req.body.isfoil;
     let count = req.body.count;
     const value = req.body.value;
-
-
     const wishlist = req.body.wishlist;
 
     let collection_id;
@@ -533,6 +703,19 @@ app.post('/api/cards', authenticateToken, async (req, res) => {
       collection_id = req.user.wishlist_id;
     } else {
       collection_id = req.user.collection_id;
+    }
+    
+
+    const role = req.user.role;
+
+    console.log(role);
+    
+    if (role == 'member' || role == 'unsubscriber'){
+      const result = await pool.query("SELECT COUNT(DISTINCT card_id) FROM cardincollection WHERE collection_id = $1",[collection_id]);
+      const numCards = result.rows[0].count;
+      if (numCards>=10){
+        return res.json({ message: "LIMIT IN COLLECTION REACHED" });
+      }
     }
 
 
@@ -617,7 +800,6 @@ app.post('/api/cards', authenticateToken, async (req, res) => {
         wishlist: wishlist,
         admin: false
       });
-
       logData(data, req, res, () => {
         res.json({ status: "CARD ALREADY EXIST UPDATED COUNT" });
       });
@@ -682,7 +864,6 @@ app.post('/api/cards', authenticateToken, async (req, res) => {
       });
 
       logData(data, req, res, () => {
-
         res.json({ status: "CREATE CARDINCOLLECTION SUCCESS" });
       });
 
@@ -957,56 +1138,6 @@ app.put('/api/collection', authenticateToken, async (req, res) => {
   }
 });
 
-
-// ############## USER LOGIN AND REGISTRATION ########################
-
-
-// POST - REGISTE USER
-app.post('/api/register', async (req, res) => {
-  try {
-
-    const { username, email, password } = req.body;
-
-    // search for existing email
-    const querySearchUser = "SELECT * FROM users WHERE email = $1"
-    const resultSearch = await pool.query(querySearchUser, [email]);
-
-    if (resultSearch.rows.length > 0) {
-      res.json({ status: "EMAIL ADDRESS IN USE" });
-    } else {
-
-      // generate salt
-      const saltRounds = 6;
-      const salt = await bcrypt.genSalt(saltRounds);
-
-      // hashed password
-      const hashPassword = await bcrypt.hash(password, salt);
-
-      const queryCreateUser = "INSERT INTO users(username,email,password,salt) VALUES ($1,$2,$3,$4) RETURNING *"
-      const user = await pool.query(queryCreateUser, [username, email, hashPassword, salt]);
-      // console.log(user);
-
-      // CREATE WISHLIST AND COLLECTION
-      const collection = await pool.query("INSERT INTO collection (user_id,wishlist) VALUES ($1,$2) RETURNING *", [user.rows[0].user_id, false])
-      const wishlist = await pool.query("INSERT INTO collection (user_id,wishlist) VALUES ($1,$2) RETURNING *", [user.rows[0].user_id, true])
-
-      const log = email + " Created an account successfully";
-
-      const data = ({
-        user_id: user.rows[0].user_id,
-        log: log,
-        admin: true
-      });
-
-      logData(data, req, res, () => {
-        res.json({ status: "ACCOUNT CREATION SUCCESSFUL", user_id: user.rows[0].user_id, collection_id: collection.rows[0].collection_id, wishlist_id: wishlist.rows[0].collection_id });
-      });
-    }
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ error: 'Interal Server Error' })
-  }
-});
 
 
 

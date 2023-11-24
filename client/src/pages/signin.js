@@ -53,6 +53,7 @@ const Login = () => {
         }
     };
 
+
     // Fetch for check if admin 
 
     const isAdmin = async () => {
@@ -61,8 +62,10 @@ const Login = () => {
                 process.env.NODE_ENV === "production"
                     ? "/api/isadmin"
                     : "http://localhost:5000/api/isadmin";
-            await axios.get(baseURL, { withCredentials: true });
-            setCookies("isAdmin", "true");
+            const response = await axios.get(baseURL, { withCredentials: true });
+
+            console.log(response.data.message);
+            setCookies("isAdmin", response.data.message);
         } catch (error) {
             // If the request returns a 419, attempt to refresh the token and retry
             if (error.response && error.response.status === 419) {
@@ -72,6 +75,7 @@ const Login = () => {
             } else {
                 console.error('Error not admin:', error);
             }
+
         }
     }
 

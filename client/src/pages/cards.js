@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import Modal from "../components/modal";
 import RenderPageNumbers from "../components/renderPageNumbers";
 import HandleRefreshToken from "../components/refreshToken";
+import { useCookies } from "react-cookie";
 
 
 export const Cards = () => {
@@ -25,6 +26,7 @@ export const Cards = () => {
 
     const [modalCard, setModalCard] = useState([]);
     const [gradedUpdate, setGradedUpdate] = useState(null);
+    const [cookies, setCookies] = useCookies();
 
 
     useEffect(() => {
@@ -36,6 +38,7 @@ export const Cards = () => {
         console.log(formattedDate);
         fetchSets();
         fetchCards();
+        console.log(cookies);
     }, [page, search, set_name, limit, sortBy]);
 
 
@@ -212,7 +215,7 @@ export const Cards = () => {
 
         return (
             <div>
-                <button ref={buttonRef} onClick={toggleMenu}>
+                <button ref={buttonRef} onClick={toggleMenu} disabled={cookies.signedIn === "" ? true : false}>
                     +
                 </button>
                 {isMenuOpen && (

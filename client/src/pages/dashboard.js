@@ -25,13 +25,14 @@ export const Dashboard = () => {
 
     useEffect(() => {
         setMessage("You need to be signed in to your account to view your overall collection progress.")
-        if (signedIn) {
+        if (signedIn == true) {
             fetchDashboard();
             fetchLogs();
         }
         if (cards.length > 0) {
             handleGenerateReport();
         }
+        console.log(cookies);
     }, [user_id, cards]);
 
 
@@ -114,11 +115,13 @@ export const Dashboard = () => {
 
         const ws = XLSX.utils.aoa_to_sheet(wsData);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Collection");
         let fileName;
         if (cards[0].wishlist) {
+            XLSX.utils.book_append_sheet(wb, ws, "Wishlist");
+
             fileName = "Wishlist.xlsx";
         } else {
+            XLSX.utils.book_append_sheet(wb, ws, "Collection");
             fileName = "Collection.xlsx";
         }
         XLSX.writeFile(wb, fileName);
@@ -133,8 +136,6 @@ export const Dashboard = () => {
                 , { withCredentials: true }
             );
             setCards(response.data.cards);
-
-
         } catch (error) {
             if (error.response && error.response.status === 419) {
                 await HandleRefreshToken();
@@ -143,7 +144,6 @@ export const Dashboard = () => {
             } else {
                 console.error("Error fetching cards:", error);
             }
-
         }
     }
 
@@ -180,8 +180,14 @@ export const Dashboard = () => {
 
                         <div >
                             <Link to={'/cards'} id="dashboard-list-top">Cards</Link>
-                            <Link to={'/collection'}>Collection</Link>
-                            <Link to={'/wishlist'} id="dashboard-list-bottom">Wishlist</Link>
+
+                            {cookies.signedIn && (
+                                <>
+                                    <Link to={'/collection'}>Collection</Link>
+                                    <Link to={'/wishlist'} id="dashboard-list-bottom">Wishlist</Link>
+                                </>
+                            )}
+
                         </div>
 
                     </div>
@@ -197,13 +203,14 @@ export const Dashboard = () => {
 
                         {logs.length > 0 ? renderLogs() : null}
                     </div>
+                    {cookies.signedIn && (
                     <div className="dashboard-row">
                         <div className="dashboard-block">
                             <button onClick={() => fetchCards(false)}>Generate Collection Report</button>
                             <button onClick={() => fetchCards(true)}>Generate Wishlist Report</button>
-
                         </div>
                     </div>
+                    )};
                 </div>
             </div>
         </main>
