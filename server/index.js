@@ -133,6 +133,9 @@ const updateSub = async (req, res, next) => {
     const user = req.user;
     const results = await pool.query("SELECT sub_id FROM subscriptionlist WHERE user_id = $1", [user.user_id]);
 
+    const response = await pool.query("SELECT role FROM users WHERE user_id = $1", [req.user.user_id]);
+    const role = response.rows[0].role;
+
     if (results.rows.length === 0) {
       return next();
     }
@@ -140,30 +143,31 @@ const updateSub = async (req, res, next) => {
     let log = "";
     const sub_id = results.rows[0].sub_id;
     const subscription = await stripe.subscriptions.retrieve(sub_id);
-    const cancel_at = subscription.cancel_at;
-    if (cancel_at == null && user.role == 'unsubscriber') {
+    const cancel_at = subscription.canceled_at;
+    console.log(cancel_at);
+    if (cancel_at == null && role == 'unsubscriber') {
       await pool.query("UPDATE users SET role = 'subscriber' WHERE email = $1;", [user.email]);
       log = user.email + " Resubscribed."
-    } else if (cancel_at){
+    } else if (cancel_at) {
       const currentUnixTime = Math.floor(new Date().getTime() / 1000);
-      if (currentUnixTime >= cancel_at){
-        await pool.query("UPDATE users SET role = 'member' WHERE email = $1;", [user.email]);
+      if (currentUnixTime >= cancel_at && role != 'unsubscriber') {
+        await pool.query("UPDATE users SET role = 'unsubscriber' WHERE email = $1;", [user.email]);
         log = user.email + " Unsubscribed."
       }
     }
 
-    if (log != ""){
+    if (log != "") {
       const data = ({
         user_id: req.user.user_id,
         log: log,
         admin: true
       });
-  
+
       logData(data, req, res, () => {
         return next();
       });
     };
-  
+
 
     return next();
   } catch (err) {
@@ -172,14 +176,19 @@ const updateSub = async (req, res, next) => {
   }
 };
 
-const isAdmin = (req, res, next) => {
-  if (req.user && req.user.role === 'admin') {
+const isAdmin = async (req, res, next) => {
+
+  const response = await pool.query("SELECT role FROM users WHERE user_id = $1", [req.user.user_id]);
+  const role = response.rows[0].role;
+  console.log(role);
+
+  if (role === 'admin') {
     return next();
-  } else if (req.user && req.user.role === 'subscriber') {
+  } else if (role === 'subscriber') {
     return res.json({ message: 'subscriber' });
-  } else if (req.user && req.user.role === 'unsubscriber') {
+  } else if (role === 'unsubscriber') {
     return res.json({ message: 'unsubscriber' });
-  } else if (req.user && req.user.role === 'member') {
+  } else if (role === 'member') {
     return res.json({ message: 'member' });
   }
   else {
@@ -241,8 +250,8 @@ app.post('/api/create-checkout-session', async (req, res) => {
       },
     ],
     mode: 'subscription',
-    success_url: `${YOUR_DOMAIN}/premium/?success=true&session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${YOUR_DOMAIN}/premium/?canceled=true`,
+    success_url: `${YOUR_DOMAIN}/premium2/?success=true&session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${YOUR_DOMAIN}/premium2/?canceled=true`,
   });
 
   console.log('hello');
@@ -704,16 +713,16 @@ app.post('/api/cards', authenticateToken, async (req, res) => {
     } else {
       collection_id = req.user.collection_id;
     }
-    
 
-    const role = req.user.role;
+    const response = await pool.query("SELECT role FROM users WHERE user_id = $1", [req.user.user_id]);
+    const role = response.rows[0].role;
 
     console.log(role);
-    
-    if (role == 'member' || role == 'unsubscriber'){
-      const result = await pool.query("SELECT COUNT(DISTINCT card_id) FROM cardincollection WHERE collection_id = $1",[collection_id]);
+
+    if (role == 'member' || role == 'unsubscriber') {
+      const result = await pool.query("SELECT COUNT(DISTINCT card_id) FROM cardincollection WHERE collection_id = $1", [collection_id]);
       const numCards = result.rows[0].count;
-      if (numCards>=10){
+      if (numCards >= 10) {
         return res.json({ message: "LIMIT IN COLLECTION REACHED" });
       }
     }

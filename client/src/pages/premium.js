@@ -40,13 +40,12 @@ export const Premium = () => {
             );
         }
 
-        console.log(cookies);
     }, [sessionId]);
 
 
-     // Fetch for check if admin 
+    // Fetch for check if admin 
 
-     const isAdmin = async () => {
+    const isAdmin = async () => {
         try {
             const baseURL =
                 process.env.NODE_ENV === "production"
@@ -54,8 +53,10 @@ export const Premium = () => {
                     : "http://localhost:5000/api/isadmin";
             const response = await axios.get(baseURL, { withCredentials: true });
 
-            console.log(response.data.message);
             setCookies("isAdmin", response.data.message);
+            console.log(response.data.message, "asdf");
+            console.log(cookies);
+
         } catch (error) {
             // If the request returns a 419, attempt to refresh the token and retry
             if (error.response && error.response.status === 419) {
@@ -65,7 +66,7 @@ export const Premium = () => {
             } else {
                 console.error('Error not admin:', error);
             }
-            
+
         }
     }
 
@@ -75,8 +76,9 @@ export const Premium = () => {
             const baseURL = process.env.NODE_ENV === 'production' ? `/api/create-subscription` : "http://localhost:5000/api/create-subscription";
             const response = await axios.post(baseURL, { session_id }, { withCredentials: true });
             window.location.reload(); // Redirect to the checkout URL
+            window.location.href = "http://localhost:3000/premium2"
         } catch (error) {
-// add refresh
+            // add refresh
         }
     };
 
@@ -96,12 +98,12 @@ export const Premium = () => {
     const fetchBillingPortal = async () => {
         try {
             const baseURL = process.env.NODE_ENV === 'production' ? `/api/create-portal-session` : "http://localhost:5000/api/create-portal-session";
-            const response = await axios.post(baseURL, { }, { withCredentials: true });
+            const response = await axios.post(baseURL, {}, { withCredentials: true });
             console.log(response.data.url);
             const url = response.data.url;
             window.location.href = url; // Redirect to the checkout URL
         } catch (error) {
-// add refresh
+            // add refresh
         }
     };
 
@@ -144,7 +146,7 @@ export const Premium = () => {
 
             <main className="main">
                 <div className="container">
-                    {cookies.isAdmin === 'member' || cookies.isAdmin ==='' && (
+                    {cookies.isAdmin === 'member' && (
                         <ProductDisplay />
                     )}
                     {cookies.isAdmin === 'subscriber' && (
@@ -153,6 +155,10 @@ export const Premium = () => {
                     {cookies.isAdmin === 'unsubscriber' && (
                         <SuccessDisplay button_text={'Renew subscription'} />
                     )}
+                    {cookies.isAdmin === '' && (
+                        <SuccessDisplay button_text={'Renew subscription'} />
+                    )}
+
                     <h1>Go for premium</h1>
                     <p>
                         Keep track of your Magic the Gathering card collection without any limits.

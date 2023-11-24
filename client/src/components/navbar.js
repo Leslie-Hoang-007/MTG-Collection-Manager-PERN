@@ -113,8 +113,8 @@ export const Navbar = () => {
                         )}
                         <li className="navbar-item">
                             <Link
-                                to="/premium"
-                                className={`custom-link ${isActive("/premium") ? "active" : ""}`}
+                                to="/premium2"
+                                className={`custom-link ${isActive("/premium2") ? "active" : ""}`}
                             >
                                 Premium
                             </Link>

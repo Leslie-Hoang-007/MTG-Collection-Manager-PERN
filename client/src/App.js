@@ -30,7 +30,7 @@ function App() {
           <Route path="/collection" element={<Collection />} />
           <Route path="/collection/:cardincollection_id" element={<CardInCollection />} />
           <Route path="/wishlist" element={<Wishlist/>} />
-          <Route path="/premium" element={<Premium/>} />
+          <Route path="/premium2" element={<Premium/>} />
           <Route path="/admin" element={<Admin/>} />
         </Routes>
       </Router>
