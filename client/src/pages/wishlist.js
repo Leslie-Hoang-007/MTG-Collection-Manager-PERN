@@ -121,9 +121,9 @@ export const Wishlist = () => {
                 </Link>
                 <div className="card-cell-control">
                     <p>
-                        {card["prices.usd"] ? parseFloat(card["prices.usd"]).toFixed(2) : 'XX.XX'}
+                        ${card["prices.usd"] ? parseFloat(card["prices.usd"]).toFixed(2) : 'XX.XX'}
                     </p>
-                    <p>{card.count}</p>
+                    <p>Count: {card.count}</p>
                     <button
                         onClick={() => fetchDeleteCard(card.cardincollection_id)}
                     >-

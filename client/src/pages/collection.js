@@ -122,9 +122,9 @@ export const Collection = () => {
                 </Link>
                 <div className="card-cell-control">
                     <p>
-                        {card.value ? parseFloat(card.value).toFixed(2) : 'XX.XX'}
+                        $ {card.value ? parseFloat(card.value).toFixed(2) : 'XX.XX'}
                     </p>
-                    <p>{card.count}</p>
+                    <p>Count: {card.count}</p>
                     <button
                         onClick={() => fetchDeleteCard(card.cardincollection_id)}
                     >-

@@ -203,7 +203,7 @@ app.get('/api/isadmin', authenticateToken, updateSub, isAdmin, (req, res) => {
 });
 
 // API FOR REFRESHING TOKENS 
-app.post('/api/refreshtoken', async (req, res) => {
+app.post('/api/refreshtoken',updateSub,  async (req, res) => {
   const refreshToken = req.cookies.refreshToken;
 
   if (!refreshToken) {

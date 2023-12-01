@@ -62,7 +62,9 @@ export const Card = () => {
                         </div>
                         <div className="card-block">
                             <h2>Price</h2>
-                            <p>{card["prices.usd"]}</p>
+                            <p>
+                                $ {card["prices.usd"] ? parseFloat(card["prices.usd"]).toFixed(2) : 'XX.XX'}
+                            </p>
                         </div>
 
                         <div className="card-block">

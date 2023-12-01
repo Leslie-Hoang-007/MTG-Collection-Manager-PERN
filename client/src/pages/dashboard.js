@@ -153,7 +153,7 @@ export const Dashboard = () => {
     return (
         <main className="main">
             <div className="container">
-                {message}
+                <div className="card-cell-control"><p>{message}</p></div>
                 <div className="dashboard-bar">
                     <div className="dashboard-card" id="card1">
                         <h1>{uniqueCards}</h1>
@@ -206,7 +206,7 @@ export const Dashboard = () => {
                     {cookies.signedIn && (
                     <div className="dashboard-row">
                         <div className="dashboard-block">
-                            <button onClick={() => fetchCards(false)}>Generate Collection Report</button>
+                            <button id = "signin" onClick={() => fetchCards(false)}>Generate Collection Report</button>
                             <button onClick={() => fetchCards(true)}>Generate Wishlist Report</button>
                         </div>
                     </div>

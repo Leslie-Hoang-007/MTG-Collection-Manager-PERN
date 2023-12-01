@@ -62,25 +62,25 @@ export const Admin = () => {
 
     // generate report
     const handleGenerateReport = () => {
-        const headers = ["Lod ID","Date", "User Id #", "Description", "Type", "Card ID", "Cardincollection ID", "Collection ID"];
-        
+        const headers = ["Lod ID", "Date", "User Id #", "Description", "Type", "Card ID", "Cardincollection ID", "Collection ID"];
+
         const wsData = [headers, ...logs.map(log => [
-          log.logs_id,
-          log.date_time,
-          log.user_id,
-          log.log,
-          log.wishlist === true ? 'Wishlist' : (log.wishlist === false ? 'Collection' : 'Other'),
-          log.card_id,
-          log.cardincollection_id,
-          log.collection_id,
+            log.logs_id,
+            log.date_time,
+            log.user_id,
+            log.log,
+            log.wishlist === true ? 'Wishlist' : (log.wishlist === false ? 'Collection' : 'Other'),
+            log.card_id,
+            log.cardincollection_id,
+            log.collection_id,
         ])];
-    
+
         const ws = XLSX.utils.aoa_to_sheet(wsData);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Logs");
         const fileName = "logs_report.xlsx";
         XLSX.writeFile(wb, fileName);
-      };
+    };
     return (
         <main className="main">
             <div className="container">
@@ -88,15 +88,17 @@ export const Admin = () => {
                 <button onClick={handleGenerateReport}>Generate Report</button>
                 <br />
                 <table>
-                    <tr>
-                        <th>Date</th>
-                        <th>User Id #</th>
-                        <th>Description</th>
-                        <th>Type</th>
-                        <th>Card ID</th>
-                        <th>Cardincollection ID</th>
-                        <th>Collection ID</th>
-                    </tr>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>User Id #</th>
+                            <th>Description</th>
+                            <th>Type</th>
+                            <th>Card ID</th>
+                            <th>Cardincollection ID</th>
+                            <th>Collection ID</th>
+                        </tr>
+                    </thead>
                     {renderLogs()}
                 </table>
             </div>

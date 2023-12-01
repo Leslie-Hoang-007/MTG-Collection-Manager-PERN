@@ -174,7 +174,7 @@ export const Cards = () => {
                 </Link>
                 <div className="card-cell-control">
                     <p>
-                        {card["prices.usd"] ? parseFloat(card["prices.usd"]).toFixed(2) : 'XX.XX'}
+                        $ {card["prices.usd"] ? parseFloat(card["prices.usd"]).toFixed(2) : 'XX.XX'}
                     </p>
                     {/* <button
                             onClick={() => fetchSaveCard(card.id, card["prices.usd"])}

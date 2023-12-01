@@ -207,7 +207,7 @@ export const CardInCollection = () => {
                         <div>
 
                             <h2>Price</h2>
-                            <p>{card.value}</p>
+                            <p>$ {card.value}</p>
                         </div>
                     </div>
 
