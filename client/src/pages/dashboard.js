@@ -210,7 +210,7 @@ export const Dashboard = () => {
                             <button onClick={() => fetchCards(true)}>Generate Wishlist Report</button>
                         </div>
                     </div>
-                    )};
+                    )}
                 </div>
             </div>
         </main>

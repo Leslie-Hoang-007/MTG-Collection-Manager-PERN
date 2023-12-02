@@ -31,12 +31,9 @@ export const Cards = () => {
 
     useEffect(() => {
 
-
-        // Format the date using the Intl.DateTimeFormat
-        const formattedDate = dateTimeFormat.format(date);
-
-        console.log(formattedDate);
-        fetchSets();
+        if (sets.length <= 1){
+            fetchSets();
+        }
         fetchCards();
         console.log(cookies);
     }, [page, search, set_name, limit, sortBy]);
@@ -57,25 +54,6 @@ export const Cards = () => {
             console.error("Error fetching cards:", error);
         }
     }
-
-    // const for later converting time 
-    // Assuming you have received the timestamp from the API response
-    const timestamp = "2023-10-20 19:56:46-04";
-
-    // Convert the timestamp to a JavaScript Date object
-    const date = new Date(timestamp);
-
-    // Create an Intl.DateTimeFormat instance to format the date
-    const dateTimeFormat = new Intl.DateTimeFormat('en-US', {
-        weekday: 'short',
-        year: 'numeric',
-        month: 'short',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        timeZoneName: 'short'
-    });
 
 
     // GET ALL CARDS
@@ -281,14 +259,14 @@ export const Cards = () => {
                             placeholder="Search cards..."
                             type="text"
                             value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                            onChange={(e) => {setSearch(e.target.value); setPage(1);}}
                         />
                     </div>
                     <div className="search-set">
                         <label>Set Name:</label>
                         <select
                             value={set_name}
-                            onChange={(e) => handleSetChange(e.target.value)}
+                            onChange={(e) => {handleSetChange(e.target.value); setPage(1);}}
                         >
                             <option value="">All Sets</option>
                             {sets.map((setName) => (

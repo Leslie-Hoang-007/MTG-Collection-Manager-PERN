@@ -31,7 +31,10 @@ export const Premium = () => {
             fetchCreateSub();
             console.log(query);
         }
-
+        if (query.get('cancled')) {
+            isAdmin();
+            navigate('/dashboard');
+        }
 
 
     }, [sessionId]);
