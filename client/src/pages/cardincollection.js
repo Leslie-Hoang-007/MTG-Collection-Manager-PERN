@@ -84,7 +84,11 @@ export const CardInCollection = () => {
             let grade_id = editGrade;
             let isfoil = editFoil;
             let count = parseInt(editCount);
-            let value = parseInt(editPrice);
+            
+            let value = editPrice;
+            if (value != null){
+                value = parseFloat(editPrice).toFixed(2);
+            }
             const baseURL = process.env.NODE_ENV === 'production' ? '/api/collection' : 'http://localhost:5000/api/collection';
 
             const response = await axios.put(baseURL, { cardincollection_id, companygradedby_id, grade_id, isfoil, count, value }, { withCredentials: true });
@@ -92,6 +96,13 @@ export const CardInCollection = () => {
             console.log(response);
             // REFRESH CARD STATS
             fetchCard();
+            // reset vars and reload page
+            setEditCompany(null);
+            setEditGrade(null);
+            setEditFoil(null);
+            setEditCount(null);
+            setEditPrice(null);
+            window.location.reload();
         } catch (error) {
 
             if (error.response && error.response.status === 419) {

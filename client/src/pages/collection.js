@@ -19,7 +19,9 @@ export const Collection = () => {
     const [sets, setSets] = useState([]);
 
     useEffect(() => {
-        fetchSets();
+        if (sets.length <= 1){
+            fetchSets();
+        }
         fetchCards();
     }, [page, search, set_name, limit, sortBy]);
 
@@ -163,14 +165,14 @@ export const Collection = () => {
                             placeholder="Search cards..."
                             type="text"
                             value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                            onChange={(e) => {setSearch(e.target.value); setPage(1);}}
                         />
                     </div>
                     <div className="search-set">
                         <label>Set Name:</label>
                         <select
                             value={set_name}
-                            onChange={(e) => handleSetChange(e.target.value)}
+                            onChange={(e) => {handleSetChange(e.target.value); setPage(1);}}
                         >
                             <option value="">All Sets</option>
                             {sets.map((setName) => (

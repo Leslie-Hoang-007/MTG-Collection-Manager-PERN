@@ -162,15 +162,15 @@ const renderSearch = () => {
                         placeholder="Search cards..."
                         type="text"
                         value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                    />
+                        onChange={(e) => {setSearch(e.target.value); setPage(1);}}
+                        />
                 </div>
                 <div className="search-set">
                     <label>Set Name:</label>
                     <select
                         value={set_name}
-                        onChange={(e) => handleSetChange(e.target.value)}
-                    >
+                        onChange={(e) => {handleSetChange(e.target.value); setPage(1);}}
+                        >
                         <option value="">All Sets</option>
                         {sets.map((setName) => (
                             <option key={setName.id} value={setName.name}>{setName.name}</option>

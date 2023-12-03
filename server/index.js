@@ -6,8 +6,8 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const stripe = require('stripe')('sk_test_51OFJVzD3rnaRGeMUPdxzB6MNVh3sJ0rdUbmkikjzDJaua1lIxsdqXmbEw7IfO9T7UZObigh6wwgsKF9t5XZIdbKj00H1ABdRqM');
-// const YOUR_DOMAIN = 'http://localhost:3000';
-const YOUR_DOMAIN = 'https://www.mtgcollectionmanager.com';
+const YOUR_DOMAIN = 'http://localhost:3000';
+// const YOUR_DOMAIN = 'https://www.mtgcollectionmanager.com';
 
 require("dotenv").config();
 
@@ -203,7 +203,7 @@ app.get('/api/isadmin', authenticateToken, updateSub, isAdmin, (req, res) => {
 });
 
 // API FOR REFRESHING TOKENS 
-app.post('/api/refreshtoken',updateSub,  async (req, res) => {
+app.post('/api/refreshtoken', updateSub, async (req, res) => {
   const refreshToken = req.cookies.refreshToken;
 
   if (!refreshToken) {
@@ -961,9 +961,8 @@ app.delete('/api/cards', authenticateToken, async (req, res) => {
 app.put('/api/collection', authenticateToken, async (req, res) => {
   try {
 
-    const { cardincollection_id, collection_id, card_id, companygradedby_id, grade_id, isfoil, count, value } = req.body;
-
-
+    let { cardincollection_id, collection_id, card_id, companygradedby_id, grade_id, isfoil, count, value } = req.body;
+    
     // console.log(cardincollection_id, collection_id,card_id,companygradedby_id,grade_id,isfoil,count,value);
     // Search
     // const card = await pool.query("SELECT * FROM cardincollection WHERE carcincollection_id = "+ cardincollection_id);
@@ -1104,7 +1103,6 @@ app.put('/api/collection', authenticateToken, async (req, res) => {
       query += numberOfParams;
       params.push(grade_id);
     }
-
     if (value) {
       numberOfParams++;
       if (numberOfParams == 1) {
@@ -1126,7 +1124,7 @@ app.put('/api/collection', authenticateToken, async (req, res) => {
 
     const log = logFront + logBack;
 
-    console.log('hello', card.rows[0]);
+    // console.log('hello', card.rows[0]);
     const data = ({
       user_id: card.rows[0].user_id,
       log: log,
@@ -1182,7 +1180,7 @@ app.post('/api/dashboard', authenticateToken, async (req, res) => {
     };
     res.json({
       totalCards: totalCount,
-      totalValue: totalValue,
+      totalValue: totalValue.toFixed(2),
       uniqueCards: uniquCards.length,
     });
   } catch (err) {

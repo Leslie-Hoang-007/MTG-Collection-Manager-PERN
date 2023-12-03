@@ -135,7 +135,11 @@ const Modal = ({ handleClose, card, graded }) => {
       let grade_id = editGrade;
       let isfoil = editFoil;
       let count = parseInt(editCount);
-      let value = parseInt(editPrice);
+
+      let value = editPrice;
+      if (value != null){
+          value = parseFloat(editPrice).toFixed(2);
+      }
 
       const baseURL = process.env.NODE_ENV === 'production' ? '/api/cards' : 'http://localhost:5000/api/cards';
       const response = await axios.post(baseURL, { card_id, companygradedby_id, grade_id, isfoil, count, value }

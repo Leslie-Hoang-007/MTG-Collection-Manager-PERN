@@ -30,13 +30,10 @@ export const Premium = () => {
             setSessionId(query.get('session_id'));
             fetchCreateSub();
             console.log(query);
-        }
-        if (query.get('cancled')) {
+        } else if (query.get('cancled')) {
             isAdmin();
             navigate('/dashboard');
         }
-
-
     }, [sessionId]);
 
 
@@ -112,7 +109,7 @@ export const Premium = () => {
                     <h5>$2.99 / month</h5>
                 </div>
             </div>
-            <button id = "signin" onClick={fetchCheckout}>Subscribe</button>
+            <button id="signin" onClick={fetchCheckout}>Subscribe</button>
 
         </section>
     );
@@ -128,7 +125,7 @@ export const Premium = () => {
                         <h5>$2.99 / month</h5>
                     </div>
                 </div>
-                <button id = "signin" onClick={() => button_text === 'Sign in' ? navigate("/account/signin/") : fetchBillingPortal()}>{button_text}</button>
+                <button id="signin" onClick={() => button_text === 'Sign in' ? navigate("/account/signin/") : fetchBillingPortal()}>{button_text}</button>
             </section>
         );
     };
@@ -138,11 +135,8 @@ export const Premium = () => {
             <p>{message}</p>
         </section>
     );
-    if (!success && message === '') {
+    if (!success) {
         return (
-
-
-
             <main className="main">
                 <div className="container">
 
@@ -164,9 +158,14 @@ export const Premium = () => {
                     {cookies.isAdmin === 'unsubscriber' && (
                         <SuccessDisplay button_text={'Renew subscription'} message={'Subscribe to starter plan!'} />
                     )}
-                    {cookies.isAdmin === '' && (
+                    {cookies.isAdmin==null && (
                         <SuccessDisplay button_text={'Sign in'} message={'Subscribe to starter plan!'} />
                     )}
+                    {cookies.isAdmin=='' && (
+                        <SuccessDisplay button_text={'Sign in'} message={'Subscribe to starter plan!'} />
+                    )}
+
+               
 
                     <div>
                         <table>
