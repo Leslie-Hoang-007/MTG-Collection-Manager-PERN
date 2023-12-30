@@ -1,4 +1,5 @@
-#MTG Collection Manager
+# MTG Collection Manager
+>>>>>>> 562eefd26a54b1876ff216a05abc18350c753a3f
 A React web application that functions as a card management system. Providing users with the ability to search, filter, edit, and add cards to their decks. Additionally, the system offers a dashboard with analytics to enable users to understand their card collection.
 # What I Learned
 - PostgreSQL, Express, React, Node.js - PERN Stack
