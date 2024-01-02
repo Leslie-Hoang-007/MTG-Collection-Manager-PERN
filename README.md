@@ -8,7 +8,7 @@ A React web application that functions as a card management system. Providing us
 - AWS deployment with Ubuntu and EC2
 - Continuous Integration/Continuous Deployment (CI/CD), automated testing and deployment
 # How to use
-Visit [Website](https://www.mtgcollectionmanager.com/) and exploure  
+Visit [Website](https://www.mtgcollectionmanager.com/) and explore  
     
 OR    
     
@@ -28,4 +28,4 @@ Start client
 ```
 npm start
 ```
-Vist `http://localhost:3000` and expolore
+Vist `http://localhost:3000` and explore
