@@ -614,7 +614,6 @@ button {
 
 @media (min-width:860px) {
   .home-header img {
-    height: 400px;
     max-width: 100%;
     /* Limit the width to 100% of the container */
     object-fit: cover;
