@@ -72,7 +72,7 @@ export const Navbar = () => {
                                 className={`custom-link`}
                                 id="logo"
                             >
-                                MTGCollector
+                                MTGCollection
                             </Link>
                         </li>
                         <li className="navbar-item">
