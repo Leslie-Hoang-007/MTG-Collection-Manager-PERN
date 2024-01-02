@@ -12,10 +12,11 @@ Visit [Website](https://www.mtgcollectionmanager.com/) and explore
     
 OR    
     
-Download file and install [Postgres](https://www.postgresql.org/download/)    
-[Create postgres user and database(mtg)](https://medium.com/coding-blocks/creating-user-database-and-adding-access-on-postgresql-8bfcd2f4a91e)   
+Download file and install [Postgres](https://www.postgresql.org/download/).    
 
-Creates .env file and fill in you credientals
+[Create postgres user and database(mtg).](https://medium.com/coding-blocks/creating-user-database-and-adding-access-on-postgresql-8bfcd2f4a91e)   
+
+Creates .env file and fill in you credientals.
 ```
 PORT = 5000
 
@@ -28,20 +29,20 @@ PGDATABASE= "mtg"
 SECRETKEY = "secretkey"
 REFRESHSECRETKEY = "refreshsecretkey"
 ```
-Go to server directory and install packages
+Go to server directory and install packages.
 ```
 npm install
 ```
-Start server
+Start server.
 ```
 npm start
 ```
-Go to client directory and install packages
+Go to client directory and install packages.
 ```
 npm install
 ```
-Start client
+Start client.
 ```
 npm start
 ```
-Vist `http://localhost:3000` and explore
+Vist `http://localhost:3000` and explore.
