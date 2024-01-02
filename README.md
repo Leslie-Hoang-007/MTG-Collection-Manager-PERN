@@ -8,7 +8,10 @@ A React web application that functions as a card management system. Providing us
 - AWS deployment with Ubuntu and EC2
 - Continuous Integration/Continuous Deployment (CI/CD), automated testing and deployment
 # How to use
-Visit [Website](https://www.mtgcollectionmanager.com/) and exploure
+Visit [Website](https://www.mtgcollectionmanager.com/) and exploure  
+    
+OR    
+    
 Go to server directory and install packages
 ```
 npm install
