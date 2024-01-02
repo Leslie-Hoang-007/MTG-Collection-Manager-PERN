@@ -7,3 +7,22 @@ A React web application that functions as a card management system. Providing us
 - OAuth 2.0 authentication and authorization with JWT
 - AWS deployment with Ubuntu and EC2
 - Continuous Integration/Continuous Deployment (CI/CD), automated testing and deployment
+# How to use
+Visit [Website](https://www.mtgcollectionmanager.com/) and exploure
+Go to server directory and install packages
+```
+npm install
+```
+Start server
+```
+npm start
+```
+Go to client directory and install packages
+```
+npm install
+```
+Start client
+```
+npm start
+```
+Vist `http://localhost:3000` and expolore
