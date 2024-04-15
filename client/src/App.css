@@ -606,10 +606,11 @@ button {
 
 
 .home-block {
-  color: #fff;
+  color:white;
   position: absolute;
   margin-left: 10%;
   margin-right: 10%;
+  width: 100%;
 }
 
 @media (min-width:860px) {
