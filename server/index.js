@@ -5,9 +5,9 @@ const pool = require("./db");
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
-const stripe = require('stripe')('sk_test_51OFJVzD3rnaRGeMUPdxzB6MNVh3sJ0rdUbmkikjzDJaua1lIxsdqXmbEw7IfO9T7UZObigh6wwgsKF9t5XZIdbKj00H1ABdRqM');
-const YOUR_DOMAIN = 'http://localhost:3000';
-// const YOUR_DOMAIN = 'https://www.mtgcollectionmanager.com';
+const stripe = require('stripe')(process.env.STRIPEKEY);
+// const YOUR_DOMAIN = 'http://localhost:3000';
+const YOUR_DOMAIN = 'https://www.mtgcollectionmanager.com';
 
 require("dotenv").config();
 
