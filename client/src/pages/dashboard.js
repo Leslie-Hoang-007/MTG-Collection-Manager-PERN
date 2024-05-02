@@ -21,18 +21,17 @@ export const Dashboard = () => {
 
     const signedIn = cookies.signedIn;
     // messages
-    const [message, setMessage] = useState("");
+    const [message, setMessage] = useState("You need to be signed in to your account to view your overall collection progress.");
 
     useEffect(() => {
-        setMessage("You need to be signed in to your account to view your overall collection progress.")
-        if (signedIn == true) {
+        if (signedIn == true) { // check cookies if signed in the gets data if so
             fetchDashboard();
             fetchLogs();
         }
         if (cards.length > 0) {
             handleGenerateReport();
         }
-        console.log(cookies);
+        // console.log(cookies);
     }, [user_id, cards]);
 
 
@@ -41,7 +40,7 @@ export const Dashboard = () => {
             const baseURL = process.env.NODE_ENV === 'production' ? "/api/dashboard" : "http://localhost:5000/api/dashboard";
             const response = await axios.post(baseURL, {}, { withCredentials: true });
             const data = response.data;
-            setMessage("");
+            setMessage(null);
             setUniqueCards(data.uniqueCards);
             setTotalCards(data.totalCards);
             setTotalValue(data.totalValue);
@@ -153,7 +152,7 @@ export const Dashboard = () => {
     return (
         <main className="main">
             <div className="container">
-                <div className="card-cell-control"><p>{message}</p></div>
+                <div className="card-cell-control" style={{visibility: message ? "visible" : "hidden"}}><p>{message}</p></div>
                 <div className="dashboard-bar">
                     <div className="dashboard-card" id="card1">
                         <h1>{uniqueCards}</h1>
@@ -173,7 +172,7 @@ export const Dashboard = () => {
 
                         <div>
                             <h2>
-                                <img src="https://help.abbyy.com/assets/en-us/vantage/1/developer/note.svg" />
+                            <img src={process.env.PUBLIC_URL + "/note-icon.png"} />
                                 Quick Access
                             </h2>
                         </div>
@@ -195,7 +194,7 @@ export const Dashboard = () => {
                         <div>
 
                             <h2>
-                                <img src={process.env.PUBLIC_URL + "/Ресурс-6@05.svg"}
+                                <img src={process.env.PUBLIC_URL + "/clock-icon.png"} 
                                 />
                                 Recent Activity
                             </h2>

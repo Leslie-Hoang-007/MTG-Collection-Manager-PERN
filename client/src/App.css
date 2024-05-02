@@ -511,9 +511,9 @@ button {
 }
 
 .dashboard-row img {
-  width: 1.25rem;
-  padding-right: .25rem;
+  width: 30px;
 }
+
 
 .dashboard-block {
   max-width: none;
