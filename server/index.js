@@ -1,37 +1,44 @@
-const express = require("express");
-const app = express(); // takes express library and run it
-const cors = require("cors");
-const pool = require("./db");
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const cookieParser = require('cookie-parser');
-const stripe = require('stripe')(process.env.STRIPEKEY);
-// const YOUR_DOMAIN = 'http://localhost:3000';
-const YOUR_DOMAIN = 'https://www.mtgcollectionmanager.com';
+// require() allows Node,js to run what is inside the () 
+// Node.js A runtime enviroment that allows JS code to run outside the browser 
+const express = require("express"); // Express - A framework for Node.js , provides abstractions and helpers that make it easier to handle APIs
+const app = express(); // takes express library and creates an instance of it (runs it)
+const cors = require("cors"); // Cors Package faccilitates communication between backend and frontend
+const pool = require("./db"); // Imposts the db.js file and executes code inside db.js using require() and assigns it to const pool
+const bcrypt = require('bcrypt');  // Imports the bcrypt module for hashing and verifying passwords securely
+const jwt = require('jsonwebtoken'); // Imports the jsonwebtoken module for creating and verifying JWT tokens (used for authentication)
+const cookieParser = require('cookie-parser'); // Imports the cookie-parser middleware to read cookies from incoming HTTP requests
+const stripe = require('stripe')(process.env.STRIPEKEY); // Imports the Stripe library and initializes it with your secret API key from environment variables, allowing your app to interact with the Stripe API for payments
+
+const YOUR_DOMAIN = 'http://localhost:3000'; // This if for runing on Local
+// const YOUR_DOMAIN = 'https://www.mtgcollectionmanager.com'; // THis is when It is Live 
 
 require("dotenv").config();
 
+
+// ====================================================================================
 // MIDDLEWARE
-app.use(express.static('public'));
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());// get data from client side from req.body objext
-app.use(cookieParser());
+// ====================================================================================
+
+app.use(express.static('public'));// allows client to access public folder without knowing route
+app.use(express.urlencoded({ extended: true })); // allow middleware to parse url-encoded data from HTML forms
+app.use(express.json());// allow middleware to pase data from client side JSON request and populate req.body object
+app.use(cookieParser());// allow to parse cookies from client side
 app.use(cors({
   origin: YOUR_DOMAIN, // Adjust this to the origin of your frontend application
-  // origin: 'https://www.mtgcollectionmanager.com', // Adjust this to the origin of your frontend application
-  // origin: `*`, // Adjust this to the origin of your frontend application
-  credentials: true
+  credentials: true // Allows cookies and auth headers from cross origin
 }));
 
 app.options('*', cors()); // Enable preflight requests for all routes
 
+// ###################### Logging/Other Functions ######################
 
 // LOGS 
-const logData = async function (data, req, res, next) {
+const logData = async function (data, req, res, next) { // accepts logData object
   try {
 
     let { user_id, log, card_id, cardincollection_id, collection_id, wishlist, admin } = data;
-    const date = new Date();
+    // Creates Time for Logs
+    const date = new Date(); // Create current date
     const options = { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', timeZoneName: 'short' };
     const date_time = new Intl.DateTimeFormat('en-US', options).format(date);
     // Use await to wait for the database query to complete
@@ -39,8 +46,10 @@ const logData = async function (data, req, res, next) {
       "INSERT INTO logs (user_id, log, date_time, card_id, cardincollection_id, collection_id, wishlist,admin) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
       [user_id, log, date_time, card_id, cardincollection_id, collection_id, wishlist, admin]
     );
-    console.log(data);
-    // console.log(result.rows[0]); // Log the query result
+    console.log("Data Sent:");
+    console.log(data); // Log the data sent
+    console.log("Results:");
+    console.log(result.rows[0]); // Log the query result
     next();
   } catch (error) {
     console.error("Error logging action:", error);
@@ -48,18 +57,21 @@ const logData = async function (data, req, res, next) {
   }
 };
 
-// APIS
 
 
+// ###################### TOKEN HANDLING ######################
 
-// ############################# TOKENS HANDELING ######################################
-
-// ACCESS TOKEN
+// GENERATES ACCESS TOKEN
 const generateAccessToken = async (user) => {
 
   try {
+    // Query DB to get users Main Collection ID
     const collection_id = await pool.query("SELECT collection_id FROM collection WHERE wishlist = false AND user_id = $1", [user.user_id]);
+    // Query DB to get users Wishlist Collection ID
     const wishlist_id = await pool.query("SELECT collection_id FROM collection WHERE wishlist = true AND user_id = $1", [user.user_id]);
+    
+    // Creates JWT using User ID + Collecation ID + Wishlish ID and signs it with SECRETKEY
+    // Returns token client
     return jwt.sign(
       {
         user_id: user.user_id,
@@ -73,18 +85,23 @@ const generateAccessToken = async (user) => {
       { expiresIn: '1h' }
     );
   } catch (error) {
+    // Log any error dutting token generation
     console.error('Error generating access token:', error);
     throw error;
   }
 };
 
 
-// REFRESH TOKEN
+// GENERATES REFRESH TOKEN
 const generateRefreshToken = async (user) => {
-
   try {
+    // Query DB to get users Main Collection ID
     const collection_id = await pool.query("SELECT collection_id FROM collection WHERE wishlist = false AND user_id = $1", [user.user_id]);
+    // Query DB to get users Wishlist Collection ID
     const wishlist_id = await pool.query("SELECT collection_id FROM collection WHERE wishlist = true AND user_id = $1", [user.user_id]);
+    
+    // Creates JWT using User ID + Collecation ID + Wishlish ID and signs it with REFRESHSECRETKEY
+    // Returns token client
     return jwt.sign(
       {
         user_id: user.user_id,
@@ -98,17 +115,25 @@ const generateRefreshToken = async (user) => {
       { expiresIn: '180d' }
     );
   } catch (error) {
+    // Log any error dutting token generation
     console.error('Error generating access token:', error);
     throw error;
   }
 };
 
+// ###################### Authentication ######################
+
 // AUTHENTICATE TOKEN AND RETURN USER
 const authenticateToken = (req, res, next) => {
+  // Gets access token from cookies
   const token = req.cookies.accessToken;
+
+  // If there is no token provided, respons with 401
   if (!token) {
     return res.status(401).json({ message: 'Unauthorized' });
   }
+
+  // verify secret key
   jwt.verify(token, process.env.SECRETKEY, (err, user) => {
     if (err) {
       if (err.name === 'TokenExpiredError') {
@@ -119,12 +144,11 @@ const authenticateToken = (req, res, next) => {
         return res.status(403).json({ message: 'Forbidden' });
       }
     }
-
+    // Token is valid; attach it to the decoded user request ovject
     req.user = user;
     next();
   });
 };
-
 
 
 // update subscription 
@@ -196,34 +220,11 @@ const isAdmin = async (req, res, next) => {
   }
 };
 
+// ====================================================================================
+// API ROUTES
+// ====================================================================================
 
-// API to check if admin
-app.get('/api/isadmin', authenticateToken, updateSub, isAdmin, (req, res) => {
-  res.json({ message: 'admin' });
-});
-
-// API FOR REFRESHING TOKENS 
-app.post('/api/refreshtoken', updateSub, async (req, res) => {
-  const refreshToken = req.cookies.refreshToken;
-
-  if (!refreshToken) {
-    return res.status(401).json({ message: 'Unauthorized' });
-  }
-
-  try {
-    const user = await jwt.verify(refreshToken, process.env.REFRESHSECRETKEY);
-
-    const accessToken = await generateAccessToken(user);
-    res.cookie('accessToken', accessToken, { httpOnly: true });
-    res.json({ accessToken });
-  } catch (err) {
-    console.error(err);
-    return res.status(403).json({ message: 'Forbidden' });
-  }
-});
-
-
-// payments
+// ###################### Payments ######################
 
 app.post('/api/create-checkout-session', async (req, res) => {
   console.log(req.body.lookup_key);
@@ -231,8 +232,6 @@ app.post('/api/create-checkout-session', async (req, res) => {
 
   });
   console.log(prices.data);
-  console.log('asdf');
-
   //get customer list #################
   // const customers = await stripe.customers.list();
   // console.log(customers);
@@ -318,11 +317,35 @@ app.post('/api/create-subscription', authenticateToken, async (req, res) => {
   }
 });
 
+// ###################### Authenticate ######################
+
+// API to check if admin
+app.get('/api/isadmin', authenticateToken, updateSub, isAdmin, (req, res) => {
+  res.json({ message: 'admin' });
+});
+
+// API FOR REFRESHING TOKENS 
+app.post('/api/refreshtoken', updateSub, async (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+
+  if (!refreshToken) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+
+  try {
+    const user = await jwt.verify(refreshToken, process.env.REFRESHSECRETKEY);
+
+    const accessToken = await generateAccessToken(user);
+    res.cookie('accessToken', accessToken, { httpOnly: true });
+    res.json({ accessToken });
+  } catch (err) {
+    console.error(err);
+    return res.status(403).json({ message: 'Forbidden' });
+  }
+});
 
 
-
-// ############## USER LOGIN AND REGISTRATION ########################
-
+// ###################### User Login AND Registeration ######################
 
 // POST - REGISTE USER
 app.post('/api/register', async (req, res) => {
@@ -452,7 +475,7 @@ app.put('/api/logout', authenticateToken, async (req, res) => {
   }
 });
 
-
+// ###################### Card DB Minipulations ######################
 
 // GET A CARD
 app.get("/api/cards/:id", async (req, res) => {
@@ -1235,8 +1258,6 @@ app.get('/api/alllogs', authenticateToken, isAdmin, async (req, res) => {
     res.status(500).send('Server Error');
   }
 });
-
-
 
 
 const port = process.env.PORT;

@@ -5,24 +5,37 @@ import axios from "axios";
 import { useCookies } from "react-cookie";// for cookies
 import { useNavigate } from "react-router-dom";
 
-
+/**
+ * Card Component
+ * ----------------
+ * Fetches and displays detailed information about a single card.
+ * Uses the `card_id` from the URL parameters to fetch data from the API.
+ */
 export const Card = () => {
+    // Get the card_id from the URL
     const { card_id } = useParams();
+
+    // Local state to store the card data
     const [card, setCard] = useState(null);
 
     useEffect(() => {
         // Make an API call to fetch card data based on the cardid
+        // depending on enviroment Production or Local
         const baseURL = process.env.NODE_ENV === 'production' ? `/api/cards/${card_id}` : `http://localhost:5000/api/cards/${card_id}`;
+
+        // Fetch card data from backend API
         axios.get(baseURL)
             .then(response => {
+                // save card returned
                 setCard(response.data.card[0]);
                 console.log(response.data.card[0]);
 
             })
             .catch(error => {
+                // log any errors
                 console.error('Error fetching card data:', error);
             });
-    }, [card_id]);
+    }, [card_id]); // rerun effect if card_id changes
 
     if (!card) {
         return <div>Loading...</div>;
